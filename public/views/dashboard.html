@@ -31,16 +31,16 @@
 
     <!-- TABS -->
     <div class="tabs-container">
-        <button class="tab-btn active" data-tab="dashboard" onclick="switchTab(event, 'dashboard')">
+        <button class="tab-btn active" data-tab="dashboard" data-target="#dashboard">
             <i class="fas fa-chart-line"></i> Dashboard
         </button>
-        <button class="tab-btn" data-tab="tree" onclick="switchTab(event, 'tree')">
+        <button class="tab-btn" data-tab="tree" data-target="#tree">
             <i class="fas fa-sitemap"></i> Cây Gia Phả
         </button>
-        <button class="tab-btn" data-tab="members" onclick="switchTab(event, 'members')">
+        <button class="tab-btn" data-tab="members" data-target="#members">
             <i class="fas fa-users"></i> Danh Sách Thành Viên
         </button>
-        <button class="tab-btn" data-tab="settings" onclick="switchTab(event, 'settings')">
+        <button class="tab-btn" data-tab="settings" data-target="#settings">
             <i class="fas fa-cog"></i> Cài Đặt
         </button>
     </div>
@@ -57,7 +57,7 @@
                     <div class="stat-info">
                         <h3>Tổng Thành Viên</h3>
                         <div class="stat-number" id="totalMembers">0</div>
-                        <span class="stat-change positive">↑ Cập nhật</span>
+                        <span class="stat-change positive">Người</span>
                     </div>
                 </div>
 
@@ -68,7 +68,7 @@
                     <div class="stat-info">
                         <h3>Nam</h3>
                         <div class="stat-number" id="maleCount">0</div>
-                        <span class="stat-change positive" id="malePercent">50%</span>
+                        <span class="stat-change positive" id="malePercent">none</span>
                     </div>
                 </div>
 
@@ -79,7 +79,7 @@
                     <div class="stat-info">
                         <h3>Nữ</h3>
                         <div class="stat-number" id="femaleCount">0</div>
-                        <span class="stat-change positive" id="femalePercent">50%</span>
+                        <span class="stat-change positive" id="femalePercent">none</span>
                     </div>
                 </div>
 
@@ -90,7 +90,7 @@
                     <div class="stat-info">
                         <h3>Thế Hệ</h3>
                         <div class="stat-number" id="generationCount">0</div>
-                        <span class="stat-change positive">Gia phả</span>
+                        <span class="stat-change positive">Đời</span>
                     </div>
                 </div>
             </div>
@@ -372,8 +372,8 @@
     </div>
 
     <!-- Scripts -->
-    <script src="data.js" defer></script>
-    <script src="familyTreeRenderer.js" defer></script>
-    <script src="dashboard.js" defer></script>
+    <script src="../components/dashboard.js" defer></script>
+    <!-- <script src="familyTreeRenderer.js" defer></script>
+    <script src="dashboard.js" defer></script> -->
 </body>
 </html>

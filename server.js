@@ -14,6 +14,13 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// function requireAuth(req, res, next) {
+//   if (!req.session || !req.session.user) {
+//     return res.redirect('/login');
+//   }
+//   next();
+// }
+
 // Public folder
 const PUBLIC_DIR = path.join(__dirname, "public");
 app.use(express.static(PUBLIC_DIR));
@@ -24,8 +31,8 @@ app.get("/login", (req, res) => {
     res.sendFile(path.join(PUBLIC_DIR, "views", "index.html"));
 });
 // Trang Dashboard (sau khi login)
-app.get("/dashboard", (req, res) => {
-    res.sendFile(path.join(PUBLIC_DIR, "views", "dashboard.html"));
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, 'views', 'dashboard.html'));
 });
 
 // SQLite

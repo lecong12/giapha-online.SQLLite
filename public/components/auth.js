@@ -120,7 +120,7 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
         }
         console.log("Registration successful");
         successBox.style.display = "block";
-        successBox.textContent = `Đăng ký thành công! Viewer Code: ${data.viewer_code}`;
+        successBox.textContent = `Đăng ký thành công! Vui lòng đăng nhập.`;
 
     } catch (e) {
         errBox.textContent = "Không thể kết nối server.";
@@ -168,7 +168,17 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
         }
 
         // → chuyển tới dashboard
-        window.location.href = "/dashboard";
+        if (data.success) {
+            // ví dụ data.user trả về từ backend
+            localStorage.setItem('user', JSON.stringify({
+                id: data.user.id,
+                name: data.user.full_name,
+                role: data.user.role
+            }));
+            localStorage.setItem('authToken', 'dummy-token');
+
+            window.location.href = "/dashboard";
+        }
 
     } catch (e) {
         errBox.textContent = "Không thể kết nối server.";
