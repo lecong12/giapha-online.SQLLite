@@ -8,5 +8,4 @@ router.post("/register", Auth.register);
 
 // Đăng nhập owner/viewer
 router.post("/login", Auth.login);
-
 module.exports = router;

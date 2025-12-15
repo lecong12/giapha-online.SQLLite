@@ -32,13 +32,11 @@ toggleBtn.addEventListener("click", () => {
     const isLoginVisible = !loginForm.classList.contains("hidden");
 
     if (isLoginVisible) {
-        // → Chuyển sang Đăng ký
         loginForm.classList.add("hidden");
         registerForm.classList.remove("hidden");
         toggleText.textContent = "Đã có tài khoản?";
         toggleBtn.textContent = "Đăng Nhập";
     } else {
-        // → Chuyển sang Đăng nhập
         registerForm.classList.add("hidden");
         loginForm.classList.remove("hidden");
         toggleText.textContent = "Chưa có tài khoản?";
@@ -59,23 +57,19 @@ function updateLoginUI() {
     const role = roleSelect.value;
 
     if (role === "owner") {
-        // Hiện email + password, ẩn viewer_code
         viewercodeInput.parentElement.style.display = "none";
         loginEmailInput.parentElement.style.display = "block";
         loginPasswordInput.parentElement.style.display = "block";
 
-        // required đúng cho owner
         loginEmailInput.required = true;
         loginPasswordInput.required = true;
         viewercodeInput.required = false;
 
     } else {
-        // Hiện viewer_code, ẩn email + password
         viewercodeInput.parentElement.style.display = "block";
         loginEmailInput.parentElement.style.display = "none";
         loginPasswordInput.parentElement.style.display = "none";
 
-        // required đúng cho viewer
         viewercodeInput.required = true;
         loginEmailInput.required = false;
         loginPasswordInput.required = false;
@@ -167,18 +161,11 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
             return;
         }
 
-        // → chuyển tới dashboard
-        if (data.success) {
-            // ví dụ data.user trả về từ backend
-            localStorage.setItem('user', JSON.stringify({
-                id: data.user.id,
-                name: data.user.full_name,
-                role: data.user.role
-            }));
-            localStorage.setItem('authToken', 'dummy-token');
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('userName', data.user.full_name);
+        localStorage.setItem('userRole', data.user.role);
 
-            window.location.href = "/dashboard";
-        }
+        window.location.href = "/dashboard";
 
     } catch (e) {
         errBox.textContent = "Không thể kết nối server.";

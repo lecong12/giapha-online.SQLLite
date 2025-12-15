@@ -5,6 +5,7 @@ const path = require("path");
 const cors = require("cors");
 
 const authRoutes = require("./src/routes/authRoutes");
+const dashboardRoutes = require("./src/routes/dashboardRoutes");
 
 const app = express();
 const PORT = 3000;
@@ -14,23 +15,18 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// function requireAuth(req, res, next) {
-//   if (!req.session || !req.session.user) {
-//     return res.redirect('/login');
-//   }
-//   next();
-// }
-
 // Public folder
 const PUBLIC_DIR = path.join(__dirname, "public");
 app.use(express.static(PUBLIC_DIR));
+app.use("/api/auth", authRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
-app.get("/", (req, res) => res.redirect("/login"));
-// Trang Login/Register
+app.get("/", (req, res) => {
+    res.sendFile(path.join(PUBLIC_DIR, "views", "root.html"));
+});
 app.get("/login", (req, res) => {
     res.sendFile(path.join(PUBLIC_DIR, "views", "index.html"));
 });
-// Trang Dashboard (sau khi login)
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, 'views', 'dashboard.html'));
 });

@@ -1,6 +1,7 @@
 // src/components/auth.js
 const path = require("path");
 const sqlite3 = require("sqlite3").verbose();
+const crypto = require('crypto');
 
 /* Kết nối database */
 const db = new sqlite3.Database(
@@ -67,13 +68,13 @@ function register(db, { full_name, email, password, confirm }) {
         });
     });
 }
-
+ 
 /* ============================================================
-   LOGIN OWNER (email + password)
+   LOGIN OWNER
 ============================================================ */
 function loginOwner(db, email, password) {
     return new Promise((resolve) => {
-        db.get(`SELECT * FROM users WHERE email = ?`, [email], (err, user) => {
+        db.get(`SELECT * FROM users WHERE email = ?`, [email.toLowerCase()], (err, user) => {
             if (err || !user) {
                 return resolve({ success: false, message: "Email không tồn tại!" });
             }
@@ -82,15 +83,18 @@ function loginOwner(db, email, password) {
                 return resolve({ success: false, message: "Sai mật khẩu!" });
             }
 
+            // Tạo token: owner_{id}_{random 16 ký tự}
+            const randomPart = crypto.randomBytes(8).toString('hex');
+            const token = `id_${user.id}_${randomPart}`;
+
             resolve({
                 success: true,
                 message: "Đăng nhập thành công!",
+                token: token,
                 user: {
                     id: user.id,
-                    email: user.email,
                     full_name: user.full_name,
-                    viewer_code: user.viewer_code,
-                    role: "owner"
+                    role: 'owner',
                 }
             });
         });
@@ -98,20 +102,28 @@ function loginOwner(db, email, password) {
 }
 
 /* ============================================================
-   LOGIN VIEWER (bằng viewer_code)
+   LOGIN VIEWER
 ============================================================ */
 function loginViewer(db, viewerCode) {
     return new Promise((resolve) => {
-        db.get(`SELECT * FROM users WHERE viewer_code = ?`, [viewerCode], (err, user) => {
+        db.get(`SELECT * FROM users WHERE viewer_code = ?`, [viewerCode.toUpperCase()], (err, user) => {
             if (err || !user) {
                 return resolve({ success: false, message: "Code không hợp lệ!" });
             }
 
+            // Tạo token: viewer_{owner_id}_{random 16 ký tự}
+            const randomPart = crypto.randomBytes(8).toString('hex');
+            const token = `viewer_${user.id}_${randomPart}`;
+
             resolve({
                 success: true,
                 message: "Truy cập Viewer thành công!",
-                owner_id: user.id,
-                mode: "viewer"
+                token: token,
+                user: {
+                    id: user.id,
+                    full_name: user.full_name,
+                    role: 'viewer',
+                }
             });
         });
     });

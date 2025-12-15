@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gia Phả Online</title>
+</head>
+<body>
+  <script>
+    (function () {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        window.location.href = '/dashboard';
+      } else {
+        window.location.href = '/login';
+      }
+    })();
+  </script>
+</body>
+</html>
