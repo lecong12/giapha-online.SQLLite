@@ -199,10 +199,10 @@ function renderGenerationPie(genDist, total) {
     });
 
     const chart = document.createElement('div');
-    chart.style.width = '320px';
-    chart.style.height = '320px';
+    chart.style.width = '400px';
+    chart.style.height = '400px';
     chart.style.borderRadius = '50%';
-    chart.style.margin = '0 auto 16px auto';
+    chart.style.margin = '0 auto -100px auto';
     chart.style.background = `conic-gradient(${gradientParts.join(',')})`;
     chart.style.boxShadow = '0 4px 10px rgba(0,0,0,0.1)';
     chart.style.position = 'relative';
@@ -213,15 +213,15 @@ function renderGenerationPie(genDist, total) {
     inner.style.top = '50%';
     inner.style.left = '50%';
     inner.style.transform = 'translate(-50%, -50%)';
-    inner.style.width = '220px';
-    inner.style.height = '220px';
+    inner.style.width = '200px';
+    inner.style.height = '200px';
     inner.style.borderRadius = '50%';
     inner.style.background = '#fff';
     inner.style.display = 'flex';
     inner.style.flexDirection = 'column';
     inner.style.alignItems = 'center';
     inner.style.justifyContent = 'center';
-    inner.style.fontSize = '24px';
+    inner.style.fontSize = '32px';
     inner.innerHTML = `<strong>${total}</strong><span style="font-size:12px;color:#666;">Thành viên</span>`;
 
     chart.appendChild(inner);
@@ -232,7 +232,8 @@ function renderGenerationPie(genDist, total) {
     legend.style.flexDirection = 'column';
     legend.style.gap = '4px';
     legend.style.marginTop = '8px';
-    legend.style.maxHeight = '200px';
+    legend.style.maxHeight = '300px';
+    legend.style.maxWidth = '500px';
     legend.style.overflowY = 'auto';
 
     segments.forEach((seg, idx) => {
