@@ -27,46 +27,41 @@ function generateViewerCode() {
    REGISTER OWNER → sinh viewer_code
 ============================================================ */
 function register(db, { full_name, email, password, confirm }) {
-    return new Promise((resolve) => {
+  return new Promise((resolve) => {
 
-        if (!email || !password || !full_name) {
-            return resolve({ success: false, message: "Thiếu thông tin!" });
-        }
+    // 1. Kiểm tra đầu vào
+    if (!email || !password || !full_name) {
+      return resolve({ success: false, message: "Thiếu thông tin!" });
+    }
 
-        if (password !== confirm) {
-            return resolve({ success: false, message: "Mật khẩu không trùng khớp!" });
-        }
+    if (password !== confirm) {
+      return resolve({ success: false, message: "Mật khẩu không trùng khớp!" });
+    }
 
-        const viewerCode = generateViewerCode();
+    // 2. Tạo viewer_code ngẫu nhiên
+    const viewerCode = generateViewerCode();
 
-        const insertUser = `
-            INSERT INTO users (email, password, viewer_code, full_name, role)
-            VALUES (?, ?, ?, ?, 'owner')
-        `;
+    const insertUser = `
+      INSERT INTO users (email, password, viewer_code, full_name, role)
+      VALUES (?, ?, ?, ?, 'owner')
+    `;
 
-        db.run(insertUser, [email, password, viewerCode, full_name], function (err) {
-            if (err) {
-                return resolve({
-                    success: false,
-                    message: "Email đã tồn tại."
-                });
-            }
-
-            const ownerId = this.lastID;
-
-            // tạo person đầu tiên cho gia phả
-            db.run(
-                `INSERT INTO people (owner_id, full_name) VALUES (?, ?)`,
-                [ownerId, full_name]
-            );
-
-            resolve({
-                success: true,
-                message: "Đăng ký thành công!",
-                viewer_code: viewerCode
-            });
+    // 3. Chỉ insert vào bảng users
+    db.run(insertUser, [email, password, viewerCode, full_name], function (err) {
+      if (err) {
+        return resolve({
+          success: false,
+          message: "Email đã tồn tại."
         });
+      }
+
+      return resolve({
+        success: true,
+        message: "Đăng ký thành công!",
+        viewer_code: viewerCode
+      });
     });
+  });
 }
  
 /* ============================================================

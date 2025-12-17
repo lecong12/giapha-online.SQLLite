@@ -6,6 +6,7 @@ function getDb(req) {
 
 function getDashboardStats(req, res) {
   const db = getDb(req);
+  const ownerId = req.user.id; // lấy id từ token
 
   // Tổng số, số Nam, số Nữ, max generation
   const sqlSummary = `
@@ -14,10 +15,11 @@ function getDashboardStats(req, res) {
       SUM(CASE WHEN gender = 'Nam' THEN 1 ELSE 0 END) AS males,
       SUM(CASE WHEN gender = 'Nữ' THEN 1 ELSE 0 END) AS females,
       MAX(generation) AS maxGeneration
-    FROM people;
+    FROM people
+    WHERE owner_id = ?;
   `;
 
-  db.get(sqlSummary, [], (err, row) => {
+  db.get(sqlSummary, [ownerId], (err, row) => {
     if (err) {
       console.error('Lỗi query tổng quan:', err.message);
       return res.status(500).json({ success: false, message: 'Lỗi server' });
@@ -32,10 +34,11 @@ function getDashboardStats(req, res) {
     const sqlGen = `
       SELECT generation, COUNT(*) AS count
       FROM people
+      WHERE owner_id = ?
       GROUP BY generation
       ORDER BY generation ASC;
     `;
-    db.all(sqlGen, [], (err2, genRows) => {
+    db.all(sqlGen, [ownerId], (err2, genRows) => {
       if (err2) {
         console.error('Lỗi query generations:', err2.message);
         return res.status(500).json({ success: false, message: 'Lỗi server' });
@@ -46,33 +49,30 @@ function getDashboardStats(req, res) {
         count: r.count
       }));
 
-      // Sinh nhật sắp tới: dùng birth_date
+      // Sinh nhật sắp tới: chỉ người còn sống của owner này
       const sqlBirthday = `
         SELECT id, full_name, birth_date
         FROM people
-        WHERE is_alive = 1
+        WHERE owner_id = ?
+          AND is_alive = 1
           AND birth_date IS NOT NULL
           AND birth_date != ''
       `;
-      db.all(sqlBirthday, [], (err3, birthdayRows) => {
+      db.all(sqlBirthday, [ownerId], (err3, birthdayRows) => {
         if (err3) {
           console.error('Lỗi query birthdays:', err3.message);
           return res.status(500).json({ success: false, message: 'Lỗi server' });
         }
 
-        // Sinh nhật sắp tới trong 45 ngày tới
         const upcomingBirthdays = calcUpcomingBirthdays(birthdayRows, 45);
-
-        // Sinh nhật đã diễn ra trong 45 ngày gần nhất vừa qua
         const recentBirthdays = calcRecentBirthdays(birthdayRows, 45);
 
-        // Map sang activities để hiển thị ở "Hoạt Động Gần Đây"
         const activities = recentBirthdays.map(item => ({
           id: item.id,
           full_name: item.full_name,
-          type: 'birthday_recent',      // label cho frontend
-          date: item.lastBirthday,      // ngày sinh nhật gần nhất
-          daysAgo: item.daysAgo         // cách đây bao nhiêu ngày
+          type: 'birthday_recent',
+          date: item.lastBirthday,
+          daysAgo: item.daysAgo
         }));
 
         return res.json({
@@ -91,6 +91,7 @@ function getDashboardStats(req, res) {
     });
   });
 }
+
 function calcUpcomingBirthdays(rows, daysAhead) {
   const now = new Date();
 

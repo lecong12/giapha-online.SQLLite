@@ -8,7 +8,7 @@ const authRoutes = require("./src/routes/authRoutes");
 const dashboardRoutes = require("./src/routes/dashboardRoutes");
 
 const app = express();
-const PORT = 8080;
+const PORT = 7060;
 
 // Middleware
 app.use(cors());
