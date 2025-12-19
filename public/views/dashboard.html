@@ -6,6 +6,29 @@
     <title>Gia Phả Online - Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../style/style.css">
+    <style>
+@keyframes slideInRight {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+</style>
 </head>
 <body class="dashboard-page">
     <!-- HEADER -->
@@ -26,6 +49,10 @@
                     <i class="fas fa-sign-out-alt"></i> Đăng Xuất
                 </button>
             </div>
+            <div class="user-info">
+    <span id="userName">User</span>
+    <span id="userRole" class="role-badge"></span>
+</div>
         </div>
     </header>
 
@@ -39,6 +66,9 @@
         </button>
         <button class="tab-btn" data-tab="members" data-target="#members">
             <i class="fas fa-users"></i> Danh Sách Thành Viên
+        </button>
+        <button class="tab-btn" data-tab="posts" data-target="#posts">
+            <i class="fas fa-newspaper"></i> Bài Viết
         </button>
         <button class="tab-btn" data-tab="settings" data-target="#settings">
             <i class="fas fa-cog"></i> Cài Đặt
@@ -103,44 +133,69 @@
                 <div id="generationChart"></div>
             </div>
 
-            <!-- BIRTHDAYS & ACTIVITIES -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 30px;">
+            <!-- BIRTHDAYS, DEATH ANNIVERSARIES & ACTIVITIES -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 30px;">
+                <!-- Card sinh nhật -->
                 <div class="tree-section">
                     <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 18px;">
-                        <i class="fas fa-birthday-cake" style="color: var(--primary);"></i> Sinh Nhật Sắp Tới (trong 45 ngày tới)
+                        <i class="fas fa-birthday-cake" style="color: var(--primary);"></i> 
+                        Sinh Nhật Sắp Tới (45 ngày)
                     </h3>
                     <div id="birthdayList" style="display: flex; flex-direction: column; gap: 12px; overflow-y: auto; max-height: 500px;"></div>
                 </div>
 
+                <!-- Card ngày giỗ -->
                 <div class="tree-section">
                     <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 18px;">
-                        <i class="fas fa-history" style="color: var(--primary);"></i> Hoạt Động Gần Đây
+                        <i class="fas fa-candle-holder" style="color: #6b7280;"></i> 
+                        Ngày Giỗ Sắp Tới (45 ngày)
+                    </h3>
+                    <div id="deathAnniversaryList" style="display: flex; flex-direction: column; gap: 12px; overflow-y: auto; max-height: 500px;"></div>
+                </div>
+
+                <!-- Card hoạt động -->
+                <div class="tree-section">
+                    <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 18px;">
+                        <i class="fas fa-history" style="color: var(--primary);"></i> 
+                        Hoạt Động Gần Đây
                     </h3>
                     <div id="activityList" style="display: flex; flex-direction: column; gap: 12px; overflow-y: auto; max-height: 500px;"></div>
                 </div>
             </div>
         </div>
+        <!-- KẾT THÚC DASHBOARD TAB -->
 
-        <!-- FAMILY TREE TAB -->
-        <div id="tree" class="tab-content">
-            <div class="tree-section">
-                <div class="tree-controls">
-                    <button class="btn-control" onclick="zoomIn()">
-                        <i class="fas fa-search-plus"></i> Phóng To
-                    </button>
-                    <button class="btn-control" onclick="zoomOut()">
-                        <i class="fas fa-search-minus"></i> Thu Nhỏ
-                    </button>
-                    <button class="btn-control" onclick="resetZoom()">
-                        <i class="fas fa-redo"></i> Đặt Lại
-                    </button>
-                    <button class="btn-control" onclick="downloadTree()">
-                        <i class="fas fa-download"></i> Tải Xuống
-                    </button>
-                </div>
-                <svg id="familyTreeSvg" style="width: 100%; height: auto; min-height: 600px; border: 2px solid #fed7aa; border-radius: 16px; background: #fffbf0;"></svg>
-            </div>
+<!-- FAMILY TREE TAB -->
+<div id="tree" class="tab-content">
+    <div class="tree-section">
+        <div class="tree-controls">
+            <!-- Dropdown chọn người -->
+            <select id="personSelect" class="btn-control" style="min-width: 300px;">
+                <option value="">-- Chọn người --</option>
+            </select>
+            
+            <!-- Nút hiển thị cây -->
+            <button class="btn-control" onclick="showSelectedPersonTree()">
+                <i class="fas fa-sitemap"></i> Hiển Thị Cây
+            </button>
+              <!-- 🆕 NÚT XEM TOÀN BỘ -->
+    <button class="btn-control" onclick="showFullFamilyTree()" 
+            style="background: linear-gradient(135deg, #10b981, #34d399); font-weight: 600;">
+        <i class="fas fa-project-diagram"></i> Xem Toàn Bộ Cây
+    </button>
+            <!-- Các nút cũ giữ nguyên -->
+            <button class="btn-control" onclick="resetZoom()">
+                <i class="fas fa-redo"></i> Đặt Lại
+            </button>
+            <button class="btn-control" onclick="downloadTree()">
+                <i class="fas fa-download"></i> Tải Xuống
+            </button>
         </div>
+        
+        <!-- SVG Canvas -->
+        <svg id="familyTreeSvg" style="width: 100%; height: auto; min-height: 600px; border: 2px solid #fed7aa; border-radius: 16px; background: linear-gradient(135deg, #fffbf0, #fef3c7, #fff7ed);"></svg>
+    </div>
+</div>
 
         <!-- MEMBERS TAB -->
         <div id="members" class="tab-content">
@@ -160,33 +215,181 @@
                 <div class="members-grid" id="membersGrid"></div>
             </div>
         </div>
-
-        <!-- SETTINGS TAB -->
-        <div id="settings" class="tab-content">
+   <!-- ==========================================
+             POSTS TAB - BÀI VIẾT
+             ========================================== -->
+        <div id="posts" class="tab-content">
             <div class="tree-section">
-                <h2 style="margin-bottom: 24px; font-size: 20px;">⚙️ Cài Đặt & Công Cụ</h2>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px;">
-                    <div class="settings-card" onclick="exportPDF()">
-                        <i class="fas fa-file-pdf"></i>
-                        <h3>📥 Xuất PDF</h3>
-                        <p>Xuất gia phả dưới dạng PDF</p>
-                    </div>
-                    <div class="settings-card" onclick="importData()">
-                        <i class="fas fa-file-csv"></i>
-                        <h3>📤 Nhập Dữ Liệu</h3>
-                        <p>Nhập dữ liệu từ file CSV</p>
-                    </div>
-                    <div class="settings-card" onclick="resetData()">
-                        <i class="fas fa-redo"></i>
-                        <h3>📄 Khôi Phục Mẫu</h3>
-                        <p>Khôi phục dữ liệu mẫu mặc định</p>
-                    </div>
-                    <div id="adminPanel"></div>
+                <!-- Header -->
+                <div class="members-header">
+                    <h2 style="font-size: 20px; margin: 0; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-newspaper" style="color: var(--primary);"></i>
+                        Bài Viết & Thông Báo
+                    </h2>
+                    <button class="btn-add" onclick="openCreatePostModal()">
+                        <i class="fas fa-plus"></i> Tạo Bài Viết
+                    </button>
+                </div>
+
+                <!-- Danh sách bài viết -->
+                <div id="postsGrid" style="display: grid; gap: 20px; margin-top: 24px;"></div>
+
+                <!-- Empty state -->
+                <div id="postsEmptyState" style="display:none; text-align: center; padding: 60px 20px; color: #999;">
+                    <i class="fas fa-newspaper" style="font-size: 64px; color: #e5e7eb; margin-bottom: 16px;"></i>
+                    <p style="font-size: 16px; margin-bottom: 8px;">Chưa có bài viết nào</p>
+                    <p style="font-size: 14px; margin-bottom: 20px;">Chia sẻ thông tin, sự kiện với gia đình</p>
+                    <button class="btn-add" onclick="openCreatePostModal()">
+                        <i class="fas fa-plus"></i> Tạo Bài Viết Đầu Tiên
+                    </button>
                 </div>
             </div>
         </div>
+        <!-- KẾT THÚC POSTS TAB -->
+        <!-- SETTINGS TAB -->
+<!-- SETTINGS TAB -->
+<div id="settings" class="tab-content">
+    <div class="tree-section">
+        <h2 style="margin-bottom: 24px; font-size: 20px;">⚙️ Cài Đặt & Công Cụ</h2>
+        
+        <!-- Grid chứa các card -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+            
+            <!-- Card 1: Xuất PDF -->
+            <div class="settings-card" onclick="exportPDF()">
+                <i class="fas fa-file-pdf" style="font-size: 48px; color: #ef4444;"></i>
+                <h3>📥 Xuất PDF</h3>
+                <p>Xuất toàn bộ gia phả thành file PDF</p>
+                <small style="color: #999;">Bao gồm tất cả thành viên và thống kê</small>
+            </div>
+
+            <!-- Card 2: Import CSV -->
+            <div class="settings-card" onclick="importData()">
+                <i class="fas fa-file-upload" style="font-size: 48px; color: #10b981;"></i>
+                <h3>📤 Nhập Dữ Liệu</h3>
+                <p>Import thành viên từ file CSV</p>
+                <button onclick="event.stopPropagation(); downloadSampleCSV()" 
+                        style="margin-top: 8px; padding: 6px 12px; background: #e5e7eb; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                    ⬇️ Tải file mẫu
+                </button>
+            </div>
+
+            <!-- Card 3: Reset dữ liệu -->
+            <div class="settings-card" onclick="resetData()" style="border-left-color: #ef4444;">
+                <i class="fas fa-redo" style="font-size: 48px; color: #f97316;"></i>
+                <h3>🔄 Khôi Phục Mẫu</h3>
+                <p>Xóa toàn bộ và load lại dữ liệu mẫu</p>
+                <small style="color: #ef4444; font-weight: 600;">⚠️ Hành động không thể hoàn tác!</small>
+            </div>
+            <!-- Card 3: Xóa toàn bộ thành viên -->
+<div class="settings-card" id="deleteAllMembersCard" onclick="deleteAllMembers()" style="display:none; border-left-color: #dc2626;">
+    <i class="fas fa-user-slash" style="font-size: 48px; color: #dc2626;"></i>
+    <h3>🗑️ Xóa Toàn Bộ Thành Viên</h3>
+    <p>Xóa TẤT CẢ thành viên khỏi gia phả</p>
+    <small style="color: #dc2626; font-weight: 600;">⚠️ Chỉ Admin, không thể hoàn tác!</small>
+</div>
+<div class="settings-card" id="clearLogsCard" onclick="clearAllActivityLogs()" style="display:none; border-left-color: #ef4444;">
+    <i class="fas fa-trash-alt" style="font-size: 48px; color: #ef4444;"></i>
+    <h3>🗑️ Xóa Lịch Sử</h3>
+    <p>Xóa toàn bộ lịch sử hoạt động</p>
+    <small style="color: #ef4444; font-weight: 600;">⚠️ Chỉ Admin, không thể hoàn tác!</small>
+</div>
+            <!-- Card 4: Thông tin hệ thống -->
+            <div class="settings-card" style="cursor: default; opacity: 0.8;">
+                <i class="fas fa-info-circle" style="font-size: 48px; color: #3b82f6;"></i>
+                <h3>ℹ️ Thông Tin</h3>
+                <p style="font-size: 13px; color: #666;">
+                    Version: 1.0.0<br>
+                    Database: SQLite<br>
+                    Owner ID: <span id="ownerIdDisplay">-</span>
+                </p>
+            </div>
+            <!-- Card 5: Quản lý Viewer (CHỈ HIỆN VỚI ADMIN) -->
+<div class="settings-card" id="viewerManagementCard" onclick="openViewerManagement()" style="display:none;">
+    <i class="fas fa-users-cog" style="font-size: 48px; color: #8b5cf6;"></i>
+    <h3>👥 Quản Lý Viewer</h3>
+    <p>Tạo và quản lý tài khoản xem gia phả</p>
+    <small style="color: #999;">Cấp quyền xem cho người khác</small>
+</div>
+        </div>
+        <!-- Kết thúc grid -->
+
+     <!-- Thay thế phần hướng dẫn cũ bằng đoạn này -->
+<div style="margin-top: 40px; padding: 24px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-left: 4px solid #0ea5e9; border-radius: 12px;">
+    <h3 style="margin-bottom: 16px; color: #0369a1; display: flex; align-items: center; gap: 10px;">
+        <i class="fas fa-file-csv"></i> 📋 Hướng Dẫn Import CSV Đầy Đủ
+    </h3>
+    
+    <!-- Cấu trúc file -->
+    <div style="margin-bottom: 20px;">
+        <h4 style="color: #0284c7; margin-bottom: 8px;">📌 Các cột BẮT BUỘC:</h4>
+        <ul style="color: #374151; line-height: 1.8; margin-left: 20px;">
+            <li><code style="background: #fff; padding: 2px 6px; border-radius: 4px; color: #dc2626;">full_name</code> - Họ và tên đầy đủ</li>
+            <li><code style="background: #fff; padding: 2px 6px; border-radius: 4px; color: #dc2626;">gender</code> - Giới tính: <strong>"Nam"</strong> hoặc <strong>"Nữ"</strong></li>
+           
+        </ul>
     </div>
 
+    <div style="margin-bottom: 20px;">
+        <h4 style="color: #0284c7; margin-bottom: 8px;">🔧 Các cột TÙY CHỌN:</h4>
+        <ul style="color: #374151; line-height: 1.8; margin-left: 20px;">
+            <li><code>birth_date</code> - Ngày sinh (YYYY-MM-DD) 
+        <strong style="color: #f97316;">hoặc "unknown" nếu không rõ</strong>
+    </li>
+    <li><code>death_date</code> - Ngày mất (YYYY-MM-DD) 
+        <strong style="color: #f97316;">hoặc "unknown" nếu không rõ</strong>
+    </li>
+            <li><code>generation</code> - Thế hệ (1, 2, 3...)</li>
+            <li><code>notes</code> - Ghi chú</li>
+            <li><code>phone</code> - Số điện thoại</li>
+            <li><code>job</code> - Nghề nghiệp</li>
+            <li><code>address</code> - Địa chỉ</li>
+            <li><code style="background: #fef3c7; padding: 2px 6px; border-radius: 4px; color: #f97316;">parent_name</code> - ⭐ Họ tên cha/mẹ (để trống nếu thủy tổ)</li>
+            <li><code style="background: #fef3c7; padding: 2px 6px; border-radius: 4px; color: #f97316;">spouse_name</code> - ⭐ Họ tên vợ/chồng (để trống nếu chưa có)</li>
+        </ul>
+    </div>
+    
+    <!-- Lưu ý quan trọng -->
+   <div style="margin-top: 20px; padding: 16px; background: #fff7ed; border-radius: 8px; border: 2px solid #fed7aa;">
+    <p style="color: #c2410c; font-weight: 700; margin-bottom: 12px; font-size: 16px;">
+        ⚠️ LƯU Ý QUAN TRỌNG VỀ THẾ HỆ:
+    </p>
+    <ul style="color: #9a3412; font-size: 14px; margin-left: 20px; line-height: 1.8;">
+        <li><strong>✅ Thế hệ được TỰ ĐỘNG TÍNH:</strong>
+            <ul style="margin-left: 20px; margin-top: 4px;">
+                <li>Nếu có <code>parent_name</code> → Thế hệ = Thế hệ cha/mẹ + 1</li>
+                <li>Nếu chỉ có <code>spouse_name</code> → Thế hệ = Thế hệ vợ/chồng</li>
+                <li>Thủy tổ (đời 1) → Để <code>generation=1</code> và <code>parent_name</code> trống</li>
+            </ul>
+        </li>
+        <li><strong>⚠️ Quy tắc bắt buộc:</strong>
+            <ul style="margin-left: 20px; margin-top: 4px;">
+                <li>Thủy tổ: <code>generation=1</code>, KHÔNG được có <code>parent_name</code></li>
+                <li>Đời > 1: Phải có <code>parent_name</code> HOẶC <code>spouse_name</code></li>
+                <li>Tên trong <code>parent_name</code> và <code>spouse_name</code> phải khớp CHÍNH XÁC</li>
+            </ul>
+        </li>
+        <li><strong>📌 Thứ tự import:</strong> Phải import cha/mẹ TRƯỚC, con SAU</li>
+    </ul>
+</div>
+
+    <!-- Ví dụ thực tế -->
+    <div style="margin-top: 20px; padding: 16px; background: #f3f4f6; border-radius: 8px; border-left: 4px solid #6b7280;">
+        <p style="color: #374151; font-weight: 600; margin-bottom: 8px;">📝 VÍ DỤ DÒNG CSV:</p>
+        <pre style="background: #fff; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 12px; color: #1f2937;">Nguyễn Văn A,Nam,1880-01-15,1945-08-20,1,Thủy tổ,,Nông dân,Hà Nội,,Trần Thị B
+Trần Thị B,Nữ,1885-03-10,1952-06-12,1,Vợ cụ A,,Dệt vải,Hà Nội,,Nguyễn Văn A
+Nguyễn Văn C,Nam,1930-01-25,,2,Con trưởng,,Kỹ sư,Hà Nội,Nguyễn Văn A,Lê Thị D</pre>
+    </div>
+    
+    <p style="margin-top: 16px; color: #6b7280; font-style: italic; font-size: 14px;">
+        💡 <strong>Tip:</strong> Click nút <strong>"Tải file mẫu"</strong> để có file CSV hoàn chỉnh với dữ liệu mẫu.
+    </p>
+</div>
+        <!-- Kết thúc hướng dẫn -->
+
+    </div>
+</div>
+<!-- Kết thúc SETTINGS TAB -->
     <!-- MEMBER DETAIL MODAL -->
     <div id="memberModal" class="modal">
         <div class="modal-content">
@@ -225,33 +428,41 @@
                         </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Ngày Sinh *</label>
-                            <input type="date" id="memberBirth" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Ngày Mất</label>
-                            <input type="date" id="memberDeath">
-                        </div>
-                    </div>
+                   <div class="form-row">
+    <div class="form-group">
+        <label>Ngày Sinh</label>
+        <input type="date" id="memberBirth" placeholder="Để trống nếu không rõ">
+        <small style="color: #6b7280; font-size: 11px; display: block; margin-top: 4px;">
+            💡 Có thể để trống nếu không biết chính xác
+        </small>
+    </div>
+    <div class="form-group">
+        <label>Ngày Mất</label>
+        <input type="date" id="memberDeath" placeholder="Để trống nếu còn sống hoặc không rõ">
+        <div style="margin-top: 8px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal;">
+                <input type="checkbox" id="isDeceasedUnknown" style="width: auto;">
+                <span style="font-size: 13px;">☑️ Đã mất nhưng không rõ ngày</span>
+            </label>
+        </div>
+    </div>
+</div>
 
                     <div class="form-row">
-                        <div class="form-group">
-                            <label>Số Điện Thoại</label>
-                            <input type="tel" id="memberPhone" placeholder="0912345678">
-                        </div>
-                        <div class="form-group">
-                            <label>Thế Hệ</label>
-                            <select id="memberGeneration">
-                                <option value="1">Thế hệ 1</option>
-                                <option value="2">Thế hệ 2</option>
-                                <option value="3">Thế hệ 3</option>
-                                <option value="4">Thế hệ 4</option>
-                                <option value="5">Thế hệ 5</option>
-                            </select>
-                        </div>
-                    </div>
+    <div class="form-group">
+        <label>Số Điện Thoại</label>
+        <input type="tel" id="memberPhone" placeholder="0912345678">
+    </div>
+    <div class="form-group">
+        <label>
+            Thế Hệ 
+            <span style="color: #f97316; font-size: 11px;">(Tự động tính)</span>
+        </label>
+        <select id="memberGeneration" disabled>
+            <option value="1">Thế hệ 1 (Thủy tổ)</option>
+        </select>
+    </div>
+</div>
 
                     <div class="form-row">
                         <div class="form-group">
@@ -269,20 +480,23 @@
                         <textarea id="memberNote" placeholder="Ví dụ: Ông ngoài, Bà, v.v."></textarea>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Cha/Mẹ</label>
-                            <select id="memberParent">
-                                <option value="">-- Không có --</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Vợ/Chồng</label>
-                            <select id="memberSpouse">
-                                <option value="">-- Không có --</option>
-                            </select>
-                        </div>
-                    </div>
+                  <div class="form-row">
+    <div class="form-group">
+        <label>
+            Cha/Mẹ 
+            <span style="color: #f97316; font-size: 11px;">(Bắt buộc nếu đời > 1)</span>
+        </label>
+        <select id="memberParent">
+            <option value="">-- Không có (Chỉ dành cho thủy tổ) --</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Vợ/Chồng</label>
+        <select id="memberSpouse">
+            <option value="">-- Không có --</option>
+        </select>
+    </div>
+</div>
 
                     <div class="form-actions">
                         <button type="button" class="btn-cancel" onclick="closeAddMemberModal()">Hủy</button>
@@ -310,17 +524,13 @@
                     </div>
 
                     <div class="form-row">
-                        <div class="form-group">
-                            <label>Thế Hệ</label>
-                            <select id="searchGeneration">
-                                <option value="">-- Tất cả --</option>
-                                <option value="1">Thế hệ 1</option>
-                                <option value="2">Thế hệ 2</option>
-                                <option value="3">Thế hệ 3</option>
-                                <option value="4">Thế hệ 4</option>
-                                <option value="5">Thế hệ 5</option>
-                            </select>
-                        </div>
+                       <div class="form-group">
+    <label>Thế Hệ</label>
+    <select id="searchGeneration">
+        <option value="">-- Tất cả --</option>
+        <!-- Các option sẽ được tạo động bằng JavaScript -->
+    </select>
+</div>
                         <div class="form-group">
                             <label>Giới Tính</label>
                             <select id="searchGender">
@@ -370,10 +580,153 @@
             </div>
         </div>
     </div>
+<!-- ==========================================
+     VIEWER MANAGEMENT MODAL
+     ========================================== -->
+<div id="viewerModal" class="modal">
+    <div class="modal-content" style="max-width: 900px;">
+        <div class="modal-header">
+            <h2>👥 Quản Lý Viewer</h2>
+            <button class="close-btn" onclick="closeViewerModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <!-- Nút tạo viewer mới -->
+            <div style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+                <button class="btn-add" onclick="openCreateViewerForm()">
+                    <i class="fas fa-plus"></i> Tạo Viewer Mới
+                </button>
+                <p style="color: #666; font-size: 13px; margin: 0;">
+                    <i class="fas fa-info-circle"></i> Viewer chỉ xem được, không thể sửa/xóa
+                </p>
+            </div>
 
-    <!-- Scripts -->
-    <script src="../components/dashboard.js"></script>
-    <!-- <script src="familyTreeRenderer.js" defer></script>
-    <script src="dashboard.js" defer></script> -->
+            <!-- Form tạo viewer (ẩn mặc định) -->
+            <!-- Form tạo viewer (ẩn mặc định) -->
+<div id="createViewerForm" style="display:none; margin-bottom: 24px; padding: 24px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 12px; border-left: 4px solid #0ea5e9;">
+    <h3 style="margin-bottom: 16px; color: #0369a1;">
+        <i class="fas fa-user-plus"></i> Tạo Viewer Mới
+    </h3>
+    <div class="form-group">
+        <label>Họ và Tên <span style="color: #ef4444;">*</span></label>
+        <input type="text" id="newViewerName" placeholder="Ví dụ: Nguyễn Văn A" required style="font-size: 15px;">
+    </div>
+    <div class="form-group">
+        <label>Mật Khẩu <span style="color: #ef4444;">*</span></label>
+        <input type="password" id="newViewerPassword" placeholder="Tối thiểu 6 ký tự" required style="font-size: 15px;">
+        <small style="color: #6b7280; font-size: 12px; margin-top: 4px; display: block;">
+            <i class="fas fa-info-circle"></i> Mật khẩu để viewer đăng nhập (tối thiểu 6 ký tự)
+        </small>
+    </div>
+    <div class="form-actions" style="margin-top: 16px;">
+        <button class="btn-cancel" onclick="cancelCreateViewer()">
+            <i class="fas fa-times"></i> Hủy
+        </button>
+        <button class="btn-save" onclick="submitCreateViewer()">
+            <i class="fas fa-check"></i> Tạo Viewer
+        </button>
+    </div>
+</div>
+
+            <!-- Danh sách viewer -->
+            <div id="viewerList" style="display: grid; gap: 16px;"></div>
+
+            <!-- Empty state -->
+            <div id="viewerEmptyState" style="display:none; text-align: center; padding: 60px 20px; color: #999;">
+                <i class="fas fa-users" style="font-size: 64px; color: #e5e7eb; margin-bottom: 16px;"></i>
+                <p style="font-size: 16px; margin-bottom: 8px;">Chưa có viewer nào</p>
+                <p style="font-size: 14px;">Click "Tạo Viewer Mới" để cấp quyền xem cho người khác</p>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ==========================================
+     CREATE/EDIT POST MODAL
+     ========================================== -->
+<div id="postModal" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header">
+            <h2 id="postModalTitle">✍️ Tạo Bài Viết</h2>
+            <button class="close-btn" onclick="closePostModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="postForm">
+                <!-- Tiêu đề -->
+                <div class="form-group">
+                    <label>Tiêu đề <span style="color: #ef4444;">*</span></label>
+                    <input type="text" id="postTitle" required placeholder="Ví dụ: Thông báo họp mặt gia đình">
+                </div>
+
+                <!-- Danh mục và Ghim -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Danh mục</label>
+                        <select id="postCategory">
+                            <option value="announcement">📢 Thông báo</option>
+                            <option value="event">🎉 Sự kiện</option>
+                            <option value="news">📰 Tin tức</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="postPinned" style="width: auto;">
+                            📌 Ghim bài viết lên đầu
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Nội dung -->
+                <div class="form-group">
+                    <label>Nội dung <span style="color: #ef4444;">*</span></label>
+                    <textarea id="postContent" required placeholder="Nhập nội dung bài viết..." style="min-height: 250px;"></textarea>
+                    <small style="color: #6b7280; font-size: 12px; display: block; margin-top: 4px;">
+                        <i class="fas fa-info-circle"></i> Hỗ trợ xuống dòng và ký tự đặc biệt
+                    </small>
+                </div>
+
+                <!-- Actions -->
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="closePostModal()">
+                        <i class="fas fa-times"></i> Hủy
+                    </button>
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-check"></i> Lưu Bài Viết
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     VIEW POST MODAL
+     ========================================== -->
+<div id="viewPostModal" class="modal">
+    <div class="modal-content" style="max-width: 900px;">
+        <div class="modal-header">
+            <h2 id="viewPostTitle"></h2>
+            <button class="close-btn" onclick="closeViewPostModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <!-- Metadata -->
+            <div id="viewPostMeta" style="display: flex; gap: 16px; padding: 12px 0; border-bottom: 2px solid #e5e7eb; margin-bottom: 20px; font-size: 13px; color: #6b7280;"></div>
+            
+            <!-- Content -->
+            <div id="viewPostContent" style="line-height: 1.8; white-space: pre-wrap;"></div>
+
+            <!-- Actions -->
+            <div id="viewPostActions" style="display: flex; gap: 12px; margin-top: 24px; padding-top: 20px; border-top: 2px solid #e5e7eb;"></div>
+        </div>
+    </div>
+</div>
+   <!-- Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="../components/familyTreeRenderer.js"></script>
+<script src="../components/dashboard.js"></script>
 </body>
 </html>

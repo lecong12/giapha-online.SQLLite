@@ -1,0 +1,9 @@
+full_name,gender,birth_date,death_date,generation,notes,phone,job,address,parent_name,spouse_name
+Nguyễn Văn A,Nam,1880-01-15,1945-08-20,1,Thủy tổ dòng họ,0912345678,Nông dân,Hà Nội,,Trần Thị B
+Trần Thị B,Nữ,1885-03-10,1952-06-12,1,Vợ cụ A,0987654321,Dệt vải,Hà Nội,,Nguyễn Văn A
+Nguyễn Văn C,Nam,1930-01-25,,2,Con trưởng,0912345679,Kỹ sư,Hà Nội,Nguyễn Văn A,Lê Thị D
+Lê Thị D,Nữ,1935-06-08,,2,Vợ ông C,0912345680,Giáo viên,Hà Nội,,Nguyễn Văn C
+Nguyễn Văn E,Nam,1955-03-12,,3,Cháu nội,0912345681,Bác sĩ,Hà Nội,Nguyễn Văn C,Trần Thị F
+Trần Thị F,Nữ,1960-07-20,,3,Vợ ông E,0912345682,Y tá,Hà Nội,,Nguyễn Văn E
+Phạm Văn G,Nam,1958-05-10,,3,Con dâu (không có cha/mẹ),0912345683,Kinh doanh,Hà Nội,,Nguyễn Thị H
+Nguyễn Thị H,Nữ,1962-08-15,,3,Con ruột,0912345684,Nhà văn,Hà Nội,Nguyễn Văn C,Phạm Văn G
