@@ -64,6 +64,8 @@ const db = new sqlite3.Database(DB_PATH, (err) => {
 app.set("db", db);
 
 // ================== START SERVER ==================
-app.listen(PORT, () => {
+const PORT = process.env.PORT || 8060;
+
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server chạy tại: http://localhost:${PORT}`);
 });
