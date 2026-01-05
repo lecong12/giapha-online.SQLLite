@@ -5,7 +5,10 @@ const path = require("path");
 const cors = require("cors");
 
 const app = express();
-const PORT = 8060;
+
+// ================== CẤU HÌNH CỔNG (PORT) ==================
+// Chỉ khai báo PORT một lần duy nhất ở đây
+const PORT = process.env.PORT || 8060; 
 
 // Middleware
 app.use(cors());
@@ -17,6 +20,7 @@ const PUBLIC_DIR = path.join(__dirname, "public");
 app.use(express.static(PUBLIC_DIR));
 
 // ================== ĐĂNG KÝ ROUTES ==================
+// Đảm bảo các file này tồn tại trong thư mục src/routes
 const authRoutes = require("./src/routes/authRoutes");
 app.use("/api/auth", authRoutes);
 
@@ -34,9 +38,10 @@ app.use("/api/viewers", viewerRoutes);
 
 const postsRoutes = require("./src/routes/postsRoutes");
 app.use("/api/posts", postsRoutes);
-// Thêm vào sau postsRoutes
+
 const activityRoutes = require("./src/routes/activityRoutes");
 app.use("/api/activities", activityRoutes);
+
 // ================== HTML ROUTES ==================
 app.get("/", (req, res) => {
     res.sendFile(path.join(PUBLIC_DIR, "views", "root.html"));
@@ -51,21 +56,21 @@ app.get('/dashboard', (req, res) => {
 });
 
 // ================== DATABASE ==================
-const DB_PATH = path.join(__dirname, "database", "giapha.db");
+// path.resolve giúp định vị chính xác file db trên hệ điều hành Linux của Render
+const DB_PATH = path.resolve(__dirname, "database", "giapha.db");
 
-const db = new sqlite3.Database(DB_PATH, (err) => {
+const db = new sqlite3.Database(DB_PATH, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
     if (err) {
         console.error("❌ Không thể kết nối SQLite:", err.message);
     } else {
-        console.log("✅ Kết nối SQLite thành công:", DB_PATH);
+        console.log("✅ Kết nối SQLite thành công tại:", DB_PATH);
     }
 });
 
 app.set("db", db);
 
 // ================== START SERVER ==================
-const PORT = process.env.PORT || 8060;
-
+// Sử dụng '0.0.0.0' để Render có thể kết nối được với ứng dụng
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server chạy tại: http://localhost:${PORT}`);
+    console.log(`🚀 Server đang chạy thành công trên Port: ${PORT}`);
 });
