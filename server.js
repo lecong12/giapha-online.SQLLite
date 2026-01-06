@@ -59,8 +59,29 @@ const db = new sqlite3.Database(DB_PATH, (err) => {
         `;
         
         db.run(sqlCreateUsers, (errCreate) => {
-            if (errCreate) console.error("❌ Lỗi tạo bảng users:", errCreate.message);
-            else console.log("✅ Đã khởi tạo bảng 'users' thành công");
+            if (errCreate) {
+                console.error("❌ Lỗi tạo bảng users:", errCreate.message);
+            } else {
+                console.log("✅ Đã khởi tạo bảng 'users' thành công");
+
+                // --- TẠO TÀI KHOẢN MẶC ĐỊNH (Nếu chưa có) ---
+                const checkSql = "SELECT id FROM users WHERE email = 'admin@gmail.com'";
+                db.get(checkSql, (err, row) => {
+                    if (!row) {
+                        // Hash SHA256 của '123456'
+                        const passHash = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92';
+                        const insertSql = `
+                            INSERT INTO users (email, password, password_hash, full_name, role, viewer_code) 
+                            VALUES (?, ?, ?, ?, 'owner', 'ADMIN12345')
+                        `;
+                        db.run(insertSql, ['admin@gmail.com', passHash, passHash, 'Admin Mặc Định'], (errInsert) => {
+                            if (!errInsert) {
+                                console.log("\n👉 Đã tạo tài khoản Admin: admin@gmail.com / 123456\n");
+                            }
+                        });
+                    }
+                });
+            }
         });
     }
 });
