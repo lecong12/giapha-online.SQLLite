@@ -2,6 +2,7 @@ const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 const cors = require("cors");
+const fs = require("fs");
 
 const app = express();
 // KHAI BÁO PORT DUY NHẤT Ở ĐÂY
@@ -29,7 +30,14 @@ app.get("/login", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "views", "ind
 app.get('/dashboard', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'views', 'dashboard.html')));
 
 // DATABASE (Dùng path.resolve để Render tìm đúng file)
-const DB_PATH = path.resolve(__dirname, "database", "giapha.db");
+const DB_DIR = path.join(__dirname, "database");
+
+// Tự động tạo thư mục database nếu chưa có (Fix lỗi deploy bị crash)
+if (!fs.existsSync(DB_DIR)) {
+    fs.mkdirSync(DB_DIR, { recursive: true });
+}
+
+const DB_PATH = path.resolve(DB_DIR, "giapha.db");
 const db = new sqlite3.Database(DB_PATH, (err) => {
     if (err) console.error("❌ Lỗi DB:", err.message);
     else console.log("✅ DB Connect:", DB_PATH);
