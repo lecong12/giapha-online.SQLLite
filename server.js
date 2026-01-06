@@ -36,7 +36,7 @@ const db = new sqlite3.Database(DB_PATH, (err) => {
 });
 app.set("db", db);
 
-// START SERVER. thiêu
+// START SERVER
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Live tại Port: ${PORT}`);
 });

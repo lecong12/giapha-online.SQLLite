@@ -93,6 +93,8 @@ async function loginOwner(req, res) {
   const db = getDb(req);
   const { email, password } = req.body;
 
+  console.log(`\n👉 Đang thử đăng nhập Admin: Email="${email}"`);
+
   if (!email || !password) {
     return res.status(400).json({ 
       success: false, 
@@ -102,7 +104,12 @@ async function loginOwner(req, res) {
 
   // Tìm user
   db.get(`SELECT * FROM users WHERE email = ? AND role = 'owner'`, [email], (err, user) => {
-    if (err || !user) {
+    if (err) {
+      console.error("❌ Lỗi truy vấn DB:", err);
+    }
+
+    if (!user) {
+      console.log("❌ Lỗi: Không tìm thấy email này trong danh sách Admin (Owner).");
       return res.status(401).json({ 
         success: false, 
         message: 'Email hoặc mật khẩu không đúng' 
@@ -113,12 +120,19 @@ async function loginOwner(req, res) {
     const passwordHash = hashPassword(password);
 
     // Kiểm tra cả password cũ và password_hash mới
-    if (user.password !== passwordHash && user.password_hash !== passwordHash) {
+    const isMatch = (user.password === passwordHash || user.password_hash === passwordHash);
+
+    if (!isMatch) {
+      console.log("❌ Lỗi: Sai mật khẩu!");
+      console.log("   - Hash nhập vào:", passwordHash);
+      console.log("   - Hash trong DB:", user.password_hash || user.password);
       return res.status(401).json({ 
         success: false, 
         message: 'Email hoặc mật khẩu không đúng' 
       });
     }
+
+    console.log("✅ Đăng nhập thành công!");
 
     // Tạo token
     const randomPart = crypto.randomBytes(8).toString('hex');
