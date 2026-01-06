@@ -15,7 +15,14 @@ function hashPassword(password) {
 ============================================================ */
 async function register(req, res) {
   const db = getDb(req);
-  const { email, password, full_name } = req.body;
+
+  if (!db) {
+    console.error("❌ Lỗi: Database chưa được khởi tạo (db is null)");
+    return res.status(500).json({ success: false, message: 'Lỗi kết nối Database' });
+  }
+
+  // Thêm || {} để tránh crash nếu req.body bị undefined
+  const { email, password, full_name } = req.body || {};
 
   console.log(`\n👉 Đang xử lý Đăng ký: Email="${email}", Name="${full_name}"`);
 
