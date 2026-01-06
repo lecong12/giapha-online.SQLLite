@@ -79,7 +79,8 @@ async function register(req, res) {
           id: userId,
           email: email,
           full_name: full_name,
-          role: 'owner'
+          role: 'owner',
+          owner_id: userId
         }
       });
     });
@@ -146,7 +147,8 @@ async function loginOwner(req, res) {
         id: user.id,
         email: user.email,
         full_name: user.full_name,
-        role: 'owner'
+        role: 'owner',
+        owner_id: user.owner_id
       }
     });
   });
