@@ -17,8 +17,11 @@ async function register(req, res) {
   const db = getDb(req);
   const { email, password, full_name } = req.body;
 
+  console.log(`\n👉 Đang xử lý Đăng ký: Email="${email}", Name="${full_name}"`);
+
   // Validate
   if (!email || !password || !full_name) {
+    console.log("❌ Thiếu thông tin bắt buộc");
     return res.status(400).json({ 
       success: false, 
       message: 'Thiếu thông tin bắt buộc' 
@@ -26,6 +29,7 @@ async function register(req, res) {
   }
 
   if (password.length < 6) {
+    console.log("❌ Mật khẩu quá ngắn");
     return res.status(400).json({ 
       success: false, 
       message: 'Mật khẩu phải có ít nhất 6 ký tự' 
@@ -34,7 +38,13 @@ async function register(req, res) {
 
   // Kiểm tra email đã tồn tại
   db.get(`SELECT id FROM users WHERE email = ?`, [email], (err, existing) => {
+    if (err) {
+      console.error("❌ Lỗi kiểm tra email:", err.message);
+      return res.status(500).json({ success: false, message: 'Lỗi server khi kiểm tra email' });
+    }
+
     if (existing) {
+      console.log("❌ Email đã tồn tại");
       return res.status(400).json({ 
         success: false, 
         message: 'Email đã được sử dụng' 
@@ -55,7 +65,7 @@ async function register(req, res) {
 
     db.run(sql, [email, passwordHash, viewerCode, full_name, passwordHash], function(errInsert) {
       if (errInsert) {
-        console.error('Lỗi đăng ký:', errInsert.message);
+        console.error('❌ Lỗi insert user:', errInsert.message);
         return res.status(500).json({ 
           success: false, 
           message: 'Lỗi đăng ký tài khoản' 
@@ -63,9 +73,12 @@ async function register(req, res) {
       }
 
       const userId = this.lastID;
+      console.log(`✅ Đăng ký thành công! User ID: ${userId}`);
 
       // Update owner_id = id (tự tham chiếu)
-      db.run(`UPDATE users SET owner_id = ? WHERE id = ?`, [userId, userId]);
+      db.run(`UPDATE users SET owner_id = ? WHERE id = ?`, [userId, userId], (errUpdate) => {
+        if (errUpdate) console.error("⚠️ Lỗi update owner_id:", errUpdate.message);
+      });
 
       // Tạo token
       const randomPart = crypto.randomBytes(8).toString('hex');
