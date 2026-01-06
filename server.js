@@ -39,8 +39,30 @@ if (!fs.existsSync(DB_DIR)) {
 
 const DB_PATH = path.resolve(DB_DIR, "giapha.db");
 const db = new sqlite3.Database(DB_PATH, (err) => {
-    if (err) console.error("❌ Lỗi DB:", err.message);
-    else console.log("✅ DB Connect:", DB_PATH);
+    if (err) {
+        console.error("❌ Lỗi DB:", err.message);
+    } else {
+        console.log("✅ DB Connect:", DB_PATH);
+        
+        // Tự động tạo bảng users nếu chưa có (Quan trọng khi Deploy)
+        const sqlCreateUsers = `
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT,
+                password TEXT,
+                password_hash TEXT,
+                full_name TEXT,
+                role TEXT,
+                owner_id INTEGER,
+                viewer_code TEXT
+            )
+        `;
+        
+        db.run(sqlCreateUsers, (errCreate) => {
+            if (errCreate) console.error("❌ Lỗi tạo bảng users:", errCreate.message);
+            else console.log("✅ Đã khởi tạo bảng 'users' thành công");
+        });
+    }
 });
 app.set("db", db);
 
