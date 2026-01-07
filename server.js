@@ -34,7 +34,7 @@ function initializeAndStartServer() {
     dbAdapter.connect((err) => {
         if (err) {
             console.error("❌ Lỗi kết nối DB:", err.message);
-            // Thoát ngay để Render biết là deploy thất bại và hiện log lỗi
+            // QUAN TRỌNG: Thoát ngay để Render biết là deploy thất bại
             process.exit(1);
         }
         
@@ -118,7 +118,11 @@ function initializeAndStartServer() {
 
             tableSchemas.forEach((sql) => {
                 dbAdapter.run(sql, (err) => {
-                    if (err) console.error("❌ Lỗi tạo bảng:", err.message);
+                    if (err) {
+                        console.error("❌ Lỗi tạo bảng:", err.message);
+                        // Nếu lỗi tạo bảng, dừng server ngay để tránh chạy tiếp với DB lỗi
+                        process.exit(1);
+                    }
                     
                     completed++;
                     if (completed === total) {
@@ -132,13 +136,19 @@ function initializeAndStartServer() {
                 // 2. Tạo tài khoản Admin mặc định nếu chưa có
                 const checkSql = "SELECT id FROM users WHERE email = 'admin@gmail.com'";
                 dbAdapter.get(checkSql, (err, row) => {
-                    if (err) return console.error("❌ Lỗi kiểm tra admin:", err.message);
+                    if (err) {
+                        console.error("❌ Lỗi kiểm tra admin:", err.message);
+                        process.exit(1);
+                    }
 
                     if (!row) {
                         const passHash = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92';
                         const insertSql = `INSERT INTO users (email, password, password_hash, full_name, role, viewer_code) VALUES (?, ?, ?, ?, 'owner', 'ADMIN12345')`;
                         dbAdapter.run(insertSql, ['admin@gmail.com', passHash, passHash, 'Admin Mặc Định'], (errInsert) => {
-                            if (errInsert) return console.error("❌ Lỗi tạo tài khoản Admin:", errInsert.message);
+                            if (errInsert) {
+                                console.error("❌ Lỗi tạo tài khoản Admin:", errInsert.message);
+                                process.exit(1);
+                            }
                             console.log("\n👉 Đã tạo tài khoản Admin: admin@gmail.com / 123456\n");
                             startListening(); // Bắt đầu lắng nghe khi đã tạo xong user
                         });
