@@ -42,9 +42,9 @@ function initializeAndStartServer() {
 
         // Tuần tự hóa các lệnh DB để đảm bảo mọi thứ sẵn sàng trước khi server chạy
         dbAdapter.serialize(() => {
-            // 1. Tạo bảng users với email là duy nhất (UNIQUE)
-            const sqlCreateUsers = `
-                CREATE TABLE IF NOT EXISTS users (
+            // Danh sách các bảng cần tạo
+            const tableSchemas = [
+                `CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT, -- Adapter sẽ tự đổi thành SERIAL cho Postgres
                     email TEXT UNIQUE,
                     password TEXT,
@@ -53,13 +53,82 @@ function initializeAndStartServer() {
                     role TEXT,
                     owner_id INTEGER,
                     viewer_code TEXT
-                )
-            `;
-            
-            dbAdapter.run(sqlCreateUsers, (errCreate) => {
-                if (errCreate) return console.error("❌ Lỗi tạo bảng users:", errCreate.message);
-                console.log("✅ Bảng 'users' đã sẵn sàng.");
+                )`,
+                `CREATE TABLE IF NOT EXISTS people (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    owner_id INTEGER,
+                    full_name TEXT,
+                    gender TEXT,
+                    birth_date TEXT,
+                    death_date TEXT,
+                    is_alive INTEGER,
+                    avatar TEXT,
+                    biography TEXT,
+                    generation INTEGER,
+                    notes TEXT,
+                    phone TEXT,
+                    job TEXT,
+                    address TEXT,
+                    member_type TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )`,
+                `CREATE TABLE IF NOT EXISTS relationships (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    parent_id INTEGER,
+                    child_id INTEGER,
+                    relation_type TEXT
+                )`,
+                `CREATE TABLE IF NOT EXISTS marriages (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    husband_id INTEGER,
+                    wife_id INTEGER,
+                    marriage_date TEXT,
+                    divorce_date TEXT,
+                    notes TEXT
+                )`,
+                `CREATE TABLE IF NOT EXISTS posts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    owner_id INTEGER,
+                    author_id INTEGER,
+                    author_role TEXT,
+                    title TEXT,
+                    content TEXT,
+                    category TEXT,
+                    is_pinned INTEGER DEFAULT 0,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )`,
+                `CREATE TABLE IF NOT EXISTS activity_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    owner_id INTEGER,
+                    actor_id INTEGER,
+                    actor_role TEXT,
+                    actor_name TEXT,
+                    action_type TEXT,
+                    entity_type TEXT,
+                    entity_name TEXT,
+                    description TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )`
+            ];
 
+            let completed = 0;
+            const total = tableSchemas.length;
+
+            tableSchemas.forEach((sql) => {
+                dbAdapter.run(sql, (err) => {
+                    if (err) console.error("❌ Lỗi tạo bảng:", err.message);
+                    
+                    completed++;
+                    if (completed === total) {
+                        console.log("✅ Tất cả bảng đã sẵn sàng.");
+                        checkAdminAndStart();
+                    }
+                });
+            });
+
+            function checkAdminAndStart() {
                 // 2. Tạo tài khoản Admin mặc định nếu chưa có
                 const checkSql = "SELECT id FROM users WHERE email = 'admin@gmail.com'";
                 dbAdapter.get(checkSql, (err, row) => {
@@ -77,7 +146,7 @@ function initializeAndStartServer() {
                         startListening(); // Bắt đầu lắng nghe nếu user đã tồn tại
                     }
                 });
-            });
+            }
         });
     });
 }
