@@ -116,6 +116,7 @@ class FamilyTreeRenderer {
             
             // Xác định người được chọn
             this.selectedPersonId = personId || 1; // Mặc định id=1
+            this.targetPersonId = this.selectedPersonId; // ✅ FIX: Cập nhật targetPersonId để processData dùng đúng ID
             
             // Lọc dữ liệu theo người được chọn
             this.filterDataByPerson(this.selectedPersonId);
@@ -165,6 +166,7 @@ class FamilyTreeRenderer {
                 personId = spouseId;
                 selectedPerson = spouse;
                 this.selectedPersonId = spouseId; // ← THÊM DÒNG NÀY
+                this.targetPersonId = spouseId; // ✅ FIX: Cập nhật targetPersonId khi chuyển sang vợ/chồng
                 
                 console.log(`📍 PersonId mới: ${personId}, Tên: ${selectedPerson.full_name}`);
             }
@@ -1348,4 +1350,3 @@ async exportPDF() {
 
 // Export global
 window.FamilyTreeRenderer = FamilyTreeRenderer;
-
