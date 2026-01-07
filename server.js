@@ -33,7 +33,14 @@ app.use("/api/posts", require("./src/routes/postsRoutes"));
 app.use("/api/activities", require("./src/routes/activityRoutes"));
 
 // HTML ROUTES
-app.get("/", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "views", "root.html")));
+app.get("/", (req, res) => {
+    const rootPath = path.join(PUBLIC_DIR, "views", "root.html");
+    if (fs.existsSync(rootPath)) {
+        res.sendFile(rootPath);
+    } else {
+        res.redirect("/login");
+    }
+});
 app.get("/login", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "views", "index.html")));
 app.get('/dashboard', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'views', 'dashboard.html')));
 
