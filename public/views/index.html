@@ -118,6 +118,6 @@
         // Chạy ngay khi tải trang để đảm bảo trạng thái đúng
         document.addEventListener('DOMContentLoaded', toggleLoginFields);
     </script>
-    <script src="../components/auth.js" defer></script>
+    <script src="../components/auth.js" defer onerror="alert('Lỗi: Không thể tải file auth.js! Hãy kiểm tra lại đường dẫn file hoặc kết nối mạng.')"></script>
 </body>
 </html>
