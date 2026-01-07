@@ -14,6 +14,9 @@ class DatabaseAdapter {
                 ssl: { rejectUnauthorized: false } // Bắt buộc cho Render
             });
             console.log("🔌 Đang sử dụng PostgreSQL (Render Mode)");
+            // Log một phần URL để chắc chắn (giấu mật khẩu)
+            const dbUrl = process.env.DATABASE_URL;
+            console.log("   Target DB Host:", dbUrl.split('@')[1] ? dbUrl.split('@')[1].split(':')[0] : 'Unknown');
         } else {
             console.log("🔌 Đang sử dụng SQLite (Local Mode)");
             this.db = null;
@@ -24,6 +27,11 @@ class DatabaseAdapter {
         if (isPostgres) {
             // Test kết nối Postgres
             this.pool.query('SELECT NOW()', (err, res) => {
+                if (err) {
+                    console.error("❌ Lỗi kết nối PostgreSQL:", err.message);
+                } else {
+                    console.log("✅ Kết nối PostgreSQL thành công!");
+                }
                 if (callback) callback(err);
             });
         } else {
@@ -34,7 +42,7 @@ class DatabaseAdapter {
             
             this.db = new sqlite3.Database(DB_PATH, (err) => {
                 if (err) console.error("❌ Lỗi kết nối SQLite:", err.message);
-                else console.log("✅ SQLite Connected:", DB_PATH);
+                else console.log("✅ SQLite Connected (File):", DB_PATH);
                 if (callback) callback(err);
             });
         }
@@ -81,11 +89,19 @@ class DatabaseAdapter {
 
         if (isPostgres) {
             const convertedSql = this._convertSql(sql);
+            // console.log("📝 SQL Exec:", convertedSql); // Uncomment nếu muốn debug từng query
+            
             this.pool.query(convertedSql, params, (err, res) => {
+                if (err) {
+                    console.error("❌ PG Query Error:", err.message, "\nSQL:", convertedSql);
+                }
                 if (callback) {
                     // Giả lập context 'this' của SQLite cho Postgres
+                    // FIX QUAN TRỌNG: Lấy ID của dòng cuối cùng được insert (SQLite behavior)
+                    const lastID = res && res.rows.length > 0 ? res.rows[res.rows.length - 1].id : 0;
+                    
                     const context = {
-                        lastID: res && res.rows.length > 0 ? res.rows[0].id : 0,
+                        lastID: lastID,
                         changes: res ? res.rowCount : 0
                     };
                     callback.call(context, err);
