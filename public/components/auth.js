@@ -27,7 +27,8 @@ async function handleLogin() {
             
             if (!email || !password) throw new Error('Vui lòng nhập đầy đủ Email và Mật khẩu');
             
-            payload = { email, password };
+            // Thêm role: 'owner' để backend nhận diện
+            payload = { email, password, role: 'owner' };
             endpoint = '/api/auth/login'; 
         } else {
             const viewerCode = document.getElementById('viewerCode').value;
@@ -35,11 +36,10 @@ async function handleLogin() {
 
             if (!viewerCode || !password) throw new Error('Vui lòng nhập Mã Viewer và Mật khẩu');
 
-            // Lưu ý: Backend authController.js dùng 'viewerCode'
-            payload = { viewerCode, password };
-            // Lưu ý: Route này cần khớp với file routes/authRoutes.js của bạn
-            // Nếu lỗi 404, hãy thử đổi thành '/api/auth/viewer-login' hoặc kiểm tra lại file routes
-            endpoint = '/api/auth/login-viewer'; 
+            // Backend cần role='viewer' để chuyển hướng sang hàm loginViewer
+            payload = { viewerCode, password, role: 'viewer' };
+            // Dùng chung endpoint /login như trong authRoutes.js
+            endpoint = '/api/auth/login'; 
         }
 
         console.log('Đang gọi API:', API_URL + endpoint);
