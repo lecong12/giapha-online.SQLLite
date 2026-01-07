@@ -112,7 +112,7 @@ async function register(req, res) {
 ============================================================ */
 async function loginOwner(req, res) {
   const db = getDb(req);
-  const { email, password } = req.body;
+  const { email, password } = req.body || {};
 
   console.log(`\n👉 Đang thử đăng nhập Admin: Email="${email}"`);
 
@@ -124,16 +124,25 @@ async function loginOwner(req, res) {
   }
 
   // Tìm user
-  db.get(`SELECT * FROM users WHERE email = ? AND role = 'owner'`, [email], (err, user) => {
+  db.get(`SELECT * FROM users WHERE email = ?`, [email], (err, user) => {
     if (err) {
       console.error("❌ Lỗi truy vấn DB:", err);
+      return res.status(500).json({ success: false, message: 'Lỗi server khi truy vấn' });
     }
 
     if (!user) {
-      console.log("❌ Lỗi: Không tìm thấy email này trong danh sách Admin (Owner).");
+      console.log("❌ Lỗi: Không tìm thấy email này trong DB.");
       return res.status(401).json({ 
         success: false, 
         message: 'Email hoặc mật khẩu không đúng' 
+      });
+    }
+
+    if (user.role !== 'owner') {
+      console.log(`❌ Lỗi: User tìm thấy nhưng role là '${user.role}' (yêu cầu 'owner').`);
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Tài khoản này không có quyền Admin' 
       });
     }
 
