@@ -34,7 +34,8 @@ function initializeAndStartServer() {
     dbAdapter.connect((err) => {
         if (err) {
             console.error("❌ Lỗi kết nối DB:", err.message);
-            return;
+            // Thoát ngay để Render biết là deploy thất bại và hiện log lỗi
+            process.exit(1);
         }
         
         app.set("db", dbAdapter); // Cung cấp dbAdapter thay vì sqlite3 gốc
