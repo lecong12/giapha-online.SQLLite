@@ -4,10 +4,10 @@ const cors = require("cors");
 const fs = require("fs");
 let dbAdapter;
 try {
-    dbAdapter = require("./src/config/db"); // Import Adapter
+    dbAdapter = require("./db"); // Import Adapter từ thư mục gốc (đơn giản hóa)
 } catch (error) {
     console.error("❌ LỖI NGHIÊM TRỌNG: Không tìm thấy file cấu hình database!");
-    console.error("👉 Hãy đảm bảo file 'src/config/db.js' đã được tạo và ĐẨY LÊN GIT.");
+    console.error("👉 Hãy đảm bảo file 'db.js' nằm cùng cấp với server.js và đã được ĐẨY LÊN GIT.");
     console.error("Chi tiết lỗi:", error.message);
     process.exit(1);
 }
