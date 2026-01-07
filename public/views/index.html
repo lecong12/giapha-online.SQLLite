@@ -29,16 +29,16 @@
             <form id="loginForm" class="auth-form">
                 <div class="form-group">
                     <label>Đăng nhập với vai trò:</label>
-                    <select id="loginRole" required>
+                    <select id="loginRole" required onchange="toggleLoginFields()">
                         <option value="owner">Admin</option>
                         <option value="viewer">Viewer</option>
                     </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="viewerCodeGroup" style="display: none;">
                     <label><i class="fas fa-code"></i> Viewer Code </label>
                     <input type="text" id="viewerCode" name="viewer_code">
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="emailGroup">
                     <label><i class="fas fa-user"></i> Email</label>
                     <input type="text" id="loginUsername" name="email" placeholder="Email only for admin" required>
                 </div>
@@ -93,6 +93,31 @@
             </div>            
         </div>
     </div>
+    <script>
+        function toggleLoginFields() {
+            const role = document.getElementById('loginRole').value;
+            const viewerGroup = document.getElementById('viewerCodeGroup');
+            const emailGroup = document.getElementById('emailGroup');
+            const viewerInput = document.getElementById('viewerCode');
+            const emailInput = document.getElementById('loginUsername');
+
+            if (role === 'owner') {
+                // Chế độ Admin: Hiện Email, Ẩn Viewer Code
+                viewerGroup.style.display = 'none';
+                emailGroup.style.display = 'block';
+                emailInput.setAttribute('required', 'required');
+                viewerInput.removeAttribute('required');
+            } else {
+                // Chế độ Viewer: Ẩn Email, Hiện Viewer Code
+                viewerGroup.style.display = 'block';
+                emailGroup.style.display = 'none';
+                viewerInput.setAttribute('required', 'required');
+                emailInput.removeAttribute('required');
+            }
+        }
+        // Chạy ngay khi tải trang để đảm bảo trạng thái đúng
+        document.addEventListener('DOMContentLoaded', toggleLoginFields);
+    </script>
     <script src="../components/auth.js" defer></script>
 </body>
 </html>
