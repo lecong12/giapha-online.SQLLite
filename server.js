@@ -2,7 +2,15 @@ const express = require("express");
 const path = require("path");
 const cors = require("cors");
 const fs = require("fs");
-const dbAdapter = require("./src/config/db"); // Import Adapter
+let dbAdapter;
+try {
+    dbAdapter = require("./src/config/db"); // Import Adapter
+} catch (error) {
+    console.error("❌ LỖI NGHIÊM TRỌNG: Không tìm thấy file cấu hình database!");
+    console.error("👉 Hãy đảm bảo file 'src/config/db.js' đã được tạo và ĐẨY LÊN GIT.");
+    console.error("Chi tiết lỗi:", error.message);
+    process.exit(1);
+}
 
 const app = express();
 // KHAI BÁO PORT DUY NHẤT Ở ĐÂY
