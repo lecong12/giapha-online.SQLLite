@@ -118,14 +118,7 @@
         // Chạy ngay khi tải trang để đảm bảo trạng thái đúng
         document.addEventListener('DOMContentLoaded', toggleLoginFields);
     </script>
-    <script>
-        // Hàm dự phòng: Nếu auth.js không tải được hoặc bị lỗi, hàm này sẽ chạy để báo cho bạn biết
-        if (typeof handleLogin === 'undefined') {
-            window.handleLogin = function() {
-                alert('Lỗi: File auth.js chưa hoạt động!\n\n1. Kiểm tra xem file public/components/auth.js có tồn tại không.\n2. Mở Console (F12) để xem có lỗi cú pháp (Syntax Error) không.\n3. Đảm bảo API_URL trong auth.js là https:// (không phải http://localhost).');
-            };
-        }
-    </script>
-    <script src="/components/auth.js" defer onerror="alert('Lỗi 404: Không tìm thấy file /components/auth.js trên server!')"></script>
+    <!-- Chỉ giữ lại một đường dẫn chuẩn nhất -->
+    <script src="/components/auth.js" defer></script>
 </body>
 </html>
