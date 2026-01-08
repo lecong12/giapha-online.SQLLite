@@ -34,36 +34,40 @@ const importData = async () => {
 
     console.log(`✅ Đã đọc ${rows.length} dòng. Bắt đầu import vào DB...`);
 
-    // 2. Insert từng dòng vào Database
+    // Map để lưu Tên -> ID (Dùng để tra cứu ở bước 2)
+    const nameToIdMap = {};
+
+    // --- BƯỚC 1: INSERT NGƯỜI VÀO BẢNG PEOPLE ---
+    console.log("🔹 BƯỚC 1: Đang tạo hồ sơ thành viên...");
     let successCount = 0;
     let errorCount = 0;
 
     for (const row of rows) {
-        // Gộp thông tin cha/vợ chồng vào ghi chú vì bảng people dùng ID liên kết
-        let extraNotes = row.notes || '';
-        if (row.parent_name) extraNotes += ` | Cha/Mẹ: ${row.parent_name}`;
-        if (row.spouse_name) extraNotes += ` | Vợ/Chồng: ${row.spouse_name}`;
-
         const sql = `
             INSERT INTO people (
                 owner_id, full_name, gender, birth_date, death_date, generation, 
-                notes, phone, job, address, is_alive
+                notes, phone, job, address, is_alive, member_type
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
-        // Mặc định owner_id = 1 (Admin), is_alive = 1 (Còn sống)
+        // Mặc định owner_id = 1 (Admin), is_alive = 1 (Còn sống), member_type = 'blood' (Huyết thống)
         const params = [
             1, row.full_name, row.gender, row.birth_date, row.death_date, row.generation,
-            extraNotes, row.phone, row.job, row.address, 1
+            row.notes, row.phone, row.job, row.address, 1, 'blood'
         ];
 
         // Dùng Promise để đợi DB xử lý xong dòng này mới qua dòng khác
         await new Promise(resolve => {
-            db.run(sql, params, (err) => {
+            // QUAN TRỌNG: Dùng function() thường thay vì arrow function để lấy 'this.lastID'
+            db.run(sql, params, function(err) {
                 if (err) {
                     console.error(`❌ Lỗi dòng '${row.full_name}':`, err.message);
                     errorCount++;
                 } else {
+                    // Lưu ID vừa tạo vào Map để dùng cho bước 2
+                    if (this.lastID) {
+                        nameToIdMap[row.full_name.trim()] = this.lastID;
+                    }
                     successCount++;
                 }
                 resolve();
@@ -71,8 +75,55 @@ const importData = async () => {
         });
     }
 
+    // --- BƯỚC 2: TẠO QUAN HỆ (CHA CON / VỢ CHỒNG) ---
+    console.log("🔹 BƯỚC 2: Đang liên kết quan hệ gia đình...");
+    let relationCount = 0;
+
+    for (const row of rows) {
+        const myId = nameToIdMap[row.full_name.trim()];
+        if (!myId) continue; // Nếu người này lỗi ở bước 1 thì bỏ qua
+
+        // 2.1 Xử lý Cha/Mẹ (Parent)
+        if (row.parent_name && nameToIdMap[row.parent_name.trim()]) {
+            const parentId = nameToIdMap[row.parent_name.trim()];
+            const sqlRel = `INSERT INTO relationships (parent_id, child_id, relation_type) VALUES (?, ?, 'blood')`;
+            
+            await new Promise(resolve => {
+                db.run(sqlRel, [parentId, myId], (err) => {
+                    if (!err) relationCount++;
+                    resolve();
+                });
+            });
+        }
+
+        // 2.2 Xử lý Vợ/Chồng (Spouse)
+        if (row.spouse_name && nameToIdMap[row.spouse_name.trim()]) {
+            const spouseId = nameToIdMap[row.spouse_name.trim()];
+            
+            // Xác định ai là chồng, ai là vợ dựa trên giới tính
+            let husbandId = myId;
+            let wifeId = spouseId;
+            if (row.gender === 'Nữ') {
+                husbandId = spouseId;
+                wifeId = myId;
+            }
+
+            const sqlMarr = `INSERT INTO marriages (husband_id, wife_id, marriage_date) VALUES (?, ?, ?)`;
+            await new Promise(resolve => {
+                // Kiểm tra trùng lặp đơn giản bằng cách cứ insert, nếu lỗi thì thôi (hoặc insert blind)
+                db.run(sqlMarr, [husbandId, wifeId, ''], (err) => {
+                    if (!err) relationCount++;
+                    resolve();
+                });
+            });
+        }
+    }
+
     console.log("------------------------------------------------");
-    console.log(`🏁 Hoàn tất! Thành công: ${successCount}, Lỗi: ${errorCount}`);
+    console.log(`🏁 Hoàn tất!`);
+    console.log(`- Hồ sơ tạo mới: ${successCount}`);
+    console.log(`- Quan hệ thiết lập: ${relationCount}`);
+    console.log(`- Lỗi: ${errorCount}`);
 };
 
 importData();
