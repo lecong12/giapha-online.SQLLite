@@ -2523,7 +2523,7 @@ function populatePersonDropdown() {
         const year = person.birth_date ? new Date(person.birth_date).getFullYear() : '?';
         const status = person.is_alive ? '✅' : '⚰️';
         
-        option.textContent = `${status} ${name} (Đời thứ ${gen}, s.${year})`;
+        option.textContent = `${status} ${name} (Đời thứ ${gen})`;
         
         if (person.id === treeRenderer.selectedPersonId) {
             option.selected = true;
