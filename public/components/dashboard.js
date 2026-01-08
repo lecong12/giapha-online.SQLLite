@@ -624,6 +624,7 @@ if (member.is_alive) {
     if (userRole === 'owner') {
       actionsHtml = `
         <div class="member-actions">
+          <button class="btn-edit" onclick="openEditMemberModal(${member.id})" style="padding: 4px 8px; font-size: 12px;">
             <i class="fas fa-edit"></i> Sửa
           </button>
           <button class="btn-delete" onclick="deleteMember(${member.id})" style="padding: 4px 8px; font-size: 12px;">
