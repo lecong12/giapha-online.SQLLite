@@ -58,7 +58,8 @@ const importData = async () => {
             INSERT INTO people (
                 owner_id, full_name, gender, birth_date, death_date, generation, 
                 notes, phone, job, address, is_alive, member_type
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            RETURNING id
         `;
 
         // Mặc định owner_id = 1 (Admin), is_alive = 1 (Còn sống), member_type = 'blood' (Huyết thống)
@@ -87,6 +88,8 @@ const importData = async () => {
         });
     }
 
+    console.log(`✅ Đã tạo ${Object.keys(nameToIdMap).length} thành viên trong bộ nhớ.`);
+
     // --- BƯỚC 2: TẠO QUAN HỆ (CHA CON / VỢ CHỒNG) ---
     console.log("🔹 BƯỚC 2: Đang liên kết quan hệ gia đình...");
     let relationCount = 0;
@@ -102,7 +105,7 @@ const importData = async () => {
             const parentId = nameToIdMap[pName] || nameToIdMapLower[pName.toLowerCase()];
             
             if (parentId) {
-            const sqlRel = `INSERT INTO relationships (parent_id, child_id, relation_type) VALUES (?, ?, 'blood')`;
+            const sqlRel = `INSERT INTO relationships (parent_id, child_id, relation_type) VALUES ($1, $2, 'blood')`;
             
             await new Promise(resolve => {
                 db.run(sqlRel, [parentId, myId], (err) => {
@@ -139,7 +142,7 @@ const importData = async () => {
                 if (!processedMarriages.has(pairKey)) {
                     processedMarriages.add(pairKey);
 
-                    const sqlMarr = `INSERT INTO marriages (husband_id, wife_id, marriage_date) VALUES (?, ?, ?)`;
+                    const sqlMarr = `INSERT INTO marriages (husband_id, wife_id, marriage_date) VALUES ($1, $2, $3)`;
                     await new Promise(resolve => {
                         db.run(sqlMarr, [husbandId, wifeId, ''], (err) => {
                             if (!err) relationCount++;

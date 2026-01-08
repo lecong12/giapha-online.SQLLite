@@ -43,27 +43,25 @@ class DatabaseAdapter {
         });
     }
 
-    // Hàm serialize (giữ lại để tương thích code cũ, dù PG không cần)
+    // Hàm serialize (Giữ lại để tương thích interface, PG xử lý bất đồng bộ tự nhiên)
     serialize(callback) {
         if (callback) callback();
     }
 
-    // --- HÀM XỬ LÝ QUAN TRỌNG: Chuyển đổi cú pháp SQL ---
+    // --- HÀM XỬ LÝ SQL: Hỗ trợ cú pháp $1, $2 và tự động lấy ID ---
     _convertSql(sql) {
         if (!sql) return "";
 
         let i = 1;
         let newSql = sql.trim();
 
-        // 1. Xóa dấu chấm phẩy ở cuối (để tránh lỗi khi nối chuỗi RETURNING)
-        // FIX: Dùng regex để xóa dấu chấm phẩy và các khoảng trắng thừa ở cuối
+        // 1. Xóa dấu chấm phẩy ở cuối để tránh lỗi cú pháp khi nối thêm RETURNING
         newSql = newSql.replace(/;\s*$/, "");
 
-        // 2. Thay thế dấu ? bằng $1, $2, $3... (Chuẩn PostgreSQL)
+        // 2. Nếu query dùng dấu ? (kiểu cũ), chuyển sang $1, $2... (Chuẩn PostgreSQL)
         newSql = newSql.replace(/\?/g, () => `$${i++}`);
         
-        // 3. Thay thế cú pháp tạo bảng (SQLite -> PostgreSQL)
-        // AUTOINCREMENT -> SERIAL
+        // 3. Chuyển đổi cú pháp tạo bảng (nếu còn sót lại từ code cũ)
         newSql = newSql.replace(/INTEGER PRIMARY KEY AUTOINCREMENT/gi, 'SERIAL PRIMARY KEY');
         // INT PRIMARY KEY -> SERIAL PRIMARY KEY (phòng hờ)
         newSql = newSql.replace(/INTEGER PRIMARY KEY/gi, 'SERIAL PRIMARY KEY');
@@ -96,8 +94,7 @@ class DatabaseAdapter {
             }
 
             if (callback) {
-                // Giả lập context 'this' của SQLite cho PostgreSQL
-                // Lấy ID của dòng cuối cùng được insert
+                // Lấy ID của dòng vừa insert (PostgreSQL trả về qua RETURNING id)
                 let lastID = 0;
                 if (res && res.rows && res.rows.length > 0) {
                     // Lấy ID từ dòng cuối cùng (thường là dòng vừa insert)
@@ -110,7 +107,7 @@ class DatabaseAdapter {
                     changes: res ? res.rowCount : 0
                 };
                 
-                // Gọi callback và bind context
+                // Gọi callback và bind context (để dùng được this.lastID)
                 callback.call(context, null);
             }
         });
