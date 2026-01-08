@@ -802,8 +802,11 @@ document.getElementById('isDeceasedUnknown').checked = isDeceasedUnknown;
     document.getElementById('memberParentSearch').value = parent ? parent.full_name : '';
     document.getElementById('memberParent').value = parent ? parent.id : '';
     
-    document.getElementById('memberSpouseSearch').value = spouse ? spouse.spouse_name : '';
-    document.getElementById('memberSpouse').value = spouse ? spouse.spouse_id : '';
+    // ✅ Fix: Hiển thị tên vợ/chồng từ text import nếu chưa có liên kết ID
+    const displaySpouseName = (spouse && spouse.spouse_name) ? spouse.spouse_name : (member.spouse_name || '');
+    const displaySpouseId = (spouse && spouse.spouse_id) ? spouse.spouse_id : '';
+    document.getElementById('memberSpouseSearch').value = displaySpouseName;
+    document.getElementById('memberSpouse').value = displaySpouseId;
 
     // Filter chính mình ra khỏi danh sách gợi ý
     const validMembers = allMembers.filter(m => m.id !== memberId);
