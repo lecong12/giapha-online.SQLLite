@@ -669,6 +669,7 @@ if (member.member_type === 'in_law') {
         <div class="member-info">
           <p><i class="fas fa-birthday-cake"></i> ${member.birth_date || 'N/A'}</p>
           <p><i class="fas fa-heart"></i> <span style="color:${statusColor}">${statusText}</span></p>
+          ${member.spouse ? `<p><i class="fas fa-ring" style="color:#ec4899;"></i> ${member.spouse.spouse_name}</p>` : ''}
           ${member.phone ? `<p><i class="fas fa-phone"></i> ${member.phone}</p>` : ''}
           ${member.job ? `<p><i class="fas fa-briefcase"></i> ${member.job}</p>` : ''}
         </div>
@@ -1008,7 +1009,7 @@ if (member.is_alive) {
       : 'Không có';
 
     const spouseHtml = member.spouse 
-      ? member.spouse.spouse_name 
+      ? `<a href="#" onclick="viewMemberDetail(${member.spouse.spouse_id}); return false;" style="color:#0ea5e9;text-decoration:none;font-weight:600;">${member.spouse.spouse_name}</a>`
       : 'Không có';
 
     content.innerHTML = `
