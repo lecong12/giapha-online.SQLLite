@@ -73,6 +73,17 @@ function calculateAge(birthDate) {
   
   return age;
 }
+
+/**
+ * Rút gọn tên hiển thị cho cây gia phả (theo yêu cầu: 3-4 chữ giữ nguyên, dài hơn lấy 3 chữ cuối)
+ */
+function formatNameForTree(fullName) {
+  if (!fullName) return '';
+  const words = fullName.trim().split(/\s+/);
+  if (words.length <= 4) return fullName;
+  return words.slice(-3).join(' ');
+}
+
 /* ==========================================================
 1. CHUYỂN TAB
 ========================================================== */
@@ -2530,7 +2541,8 @@ function populatePersonDropdown() {
         option.style.color = '#1f2937';
         option.style.backgroundColor = '#ffffff';
         
-        const name = person.full_name || 'Không tên';
+        const rawName = person.full_name || 'Không tên';
+        const name = formatNameForTree(rawName);
         const gen = person.generation || '?';
         let year = '?';
         if (person.birth_date && person.birth_date !== 'unknown') {
