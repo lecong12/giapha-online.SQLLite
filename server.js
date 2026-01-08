@@ -2,15 +2,7 @@ const express = require("express");
 const path = require("path");
 const cors = require("cors");
 const fs = require("fs");
-let dbAdapter;
-try {
-    dbAdapter = require("./db"); // Import Adapter từ thư mục gốc (đơn giản hóa)
-} catch (error) {
-    console.error("❌ LỖI NGHIÊM TRỌNG: Không tìm thấy file cấu hình database!");
-    console.error("👉 Hãy đảm bảo file 'db.js' nằm cùng cấp với server.js và đã được ĐẨY LÊN GIT.");
-    console.error("Chi tiết lỗi:", error.message);
-    process.exit(1);
-}
+const dbAdapter = require("./db"); // Import Adapter PostgreSQL
 
 const app = express();
 // KHAI BÁO PORT DUY NHẤT Ở ĐÂY
