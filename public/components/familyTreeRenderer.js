@@ -691,7 +691,13 @@ async render(personId = null) {
         nameText.setAttribute('fill', textColor);
         
         let nameDisplay = person.full_name || 'Không tên';
-        if(nameDisplay.length > 18) nameDisplay = nameDisplay.substring(0, 16) + '..';
+        
+        // Logic rút gọn tên: Nếu > 4 từ thì chỉ lấy 3 từ cuối (theo yêu cầu)
+        const words = nameDisplay.trim().split(/\s+/);
+        if (words.length > 4) {
+            nameDisplay = words.slice(-3).join(' ');
+        }
+        
         nameText.textContent = nameDisplay;
         g.appendChild(nameText);
 
