@@ -689,22 +689,31 @@ if (member.member_type === 'in_law') {
 // 5.3. Tìm kiếm đơn giản (search bar)
 function setupSimpleSearch() {
   const searchInput = document.getElementById('searchInput');
-  if (!searchInput) return;
+  const filterType = document.getElementById('filterMemberType'); // ✅ Lấy element lọc
+  
+  if (!searchInput || !filterType) return;
 
-  searchInput.addEventListener('input', (e) => {
-    const keyword = e.target.value.toLowerCase().trim();
-    
-    if (!keyword) {
-      renderMembers(allMembers);
-      return;
-    }
+  // Hàm xử lý lọc chung
+  const handleFilter = () => {
+    const keyword = searchInput.value.toLowerCase().trim();
+    const type = filterType.value; // 'all', 'blood', hoặc 'in_law'
 
-    const filtered = allMembers.filter(m => 
-      m.full_name.toLowerCase().includes(keyword)
-    );
+    const filtered = allMembers.filter(m => {
+      // 1. Lọc theo tên
+      const matchName = m.full_name.toLowerCase().includes(keyword);
+      
+      // 2. Lọc theo loại (Database tách biệt logic tại đây)
+      const matchType = type === 'all' || m.member_type === type;
+      
+      return matchName && matchType;
+    });
 
     renderMembers(filtered);
-  });
+  };
+
+  // Lắng nghe sự kiện
+  searchInput.addEventListener('input', handleFilter);
+  filterType.addEventListener('change', handleFilter);
 }
 
 // 5.4. Mở modal thêm thành viên
@@ -915,7 +924,7 @@ const data = {
     notes: document.getElementById('memberNote').value.trim(),
     parent_id: parentId || null,
     spouse_id: spouseId || null,
-    member_type: parentId ? 'blood' : 'in_law'
+    member_type: parentId ? 'blood' : (spouseId ? 'in_law' : 'blood') // ✅ Logic: Có cha mẹ -> Blood, Không cha mẹ mà có vợ chồng -> In-law, Còn lại (Thủy tổ) -> Blood
 };
 
   if (!data.full_name) {

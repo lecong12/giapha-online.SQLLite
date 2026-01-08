@@ -202,6 +202,12 @@
                         <i class="fas fa-search"></i>
                         <input type="text" id="searchInput" placeholder="Tìm kiếm thành viên...">
                     </div>
+                    <!-- ✅ Thêm bộ lọc loại thành viên -->
+                    <select id="filterMemberType" class="btn-control" style="padding: 8px 12px; border-radius: 20px; border: 1px solid #e5e7eb; outline: none; cursor: pointer;">
+                        <option value="all">-- Tất cả thành viên --</option>
+                        <option value="blood">🩸 Huyết thống (Con ruột)</option>
+                        <option value="in_law">👰 Dâu / Rể (Vợ chồng)</option>
+                    </select>
                     <button class="btn-add" onclick="openAdvancedSearch()" style="background: linear-gradient(135deg, #06b6d4, #0ea5e9);">
                         <i class="fas fa-filter"></i> Tìm Nâng Cao
                     </button>

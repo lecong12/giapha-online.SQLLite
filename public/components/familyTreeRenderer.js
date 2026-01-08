@@ -184,6 +184,25 @@ class FamilyTreeRenderer {
     this.findAncestors(personId, relatedIds);
     console.log(`  → Tìm thấy ${relatedIds.size} người sau khi tìm tổ tiên`);
     
+    // 2.5. [MỚI] Tìm ANH CHỊ EM của TỔ TIÊN (Ông chú, Bà cô...)
+    // Giúp cây hiển thị đầy đủ các nhánh ngang ở các đời trên
+    const ancestorIds = Array.from(relatedIds);
+    ancestorIds.forEach(ancId => {
+        // Tìm cha mẹ của ancestor này
+        const parents = this.allRelationships
+            .filter(r => r.child_id === ancId)
+            .map(r => r.parent_id);
+        
+        parents.forEach(pId => {
+            // Tìm tất cả con của cha mẹ này (tức là anh chị em của ancId)
+            const siblings = this.allRelationships
+                .filter(r => r.parent_id === pId)
+                .map(r => r.child_id);
+            
+            siblings.forEach(sibId => relatedIds.add(sibId));
+        });
+    });
+
     // 3. Tìm CON CHÁU (đi xuống dưới)
     console.log('⬇️ Tìm con cháu...');
     this.findDescendants(personId, relatedIds);
@@ -417,8 +436,7 @@ async render(personId = null) {
     if (rootPerson) {
         // ✅ Leo ngược lên tìm Thủy Tổ (trong dữ liệu đã lọc)
         let attempts = 0;
-        const maxAttempts = 10; // Tránh vòng lặp vô hạn
-        
+        const maxAttempts = 10
         while (attempts < maxAttempts) {
             const parentRel = this.relationships.find(r => r.child_id === rootPerson.id);
             
@@ -625,10 +643,10 @@ async render(personId = null) {
 
         const isMale = person.gender === 'Nam';
         const isDead = !person.is_alive || person.death_date;
+        const isTarget = person.id === this.targetPersonId; // ✅ Kiểm tra nếu là người được chọn
 
         const bgColor = isDead ? this.config.colors.deadBg : (isMale ? this.config.colors.maleBg : this.config.colors.femaleBg);
-        const strokeColor = isMale ? this.config.colors.maleBorder : this.config.colors.femaleBorder;
-        const textColor = isDead ? this.config.colors.deadText : this.config.colors.textName;
+        const strokeColor = isTarget ? '#f59e0b' : (isMale ? this.config.colors.maleBorder : this.config.colors.femaleBorder); 
 
         // Background
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -637,9 +655,8 @@ async render(personId = null) {
         rect.setAttribute('rx', '12');
         rect.setAttribute('fill', bgColor);
         rect.setAttribute('stroke', strokeColor);
-        rect.setAttribute('stroke-width', '2');
+        rect.setAttribute('stroke-width', isTarget ? '4' : '2'); // ✅ Viền dày hơn nếu là target
         g.appendChild(rect);
-
         // Avatar
         const clipId = `clip-${person.id}`;
         const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
