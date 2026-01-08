@@ -17,7 +17,7 @@ function ensureAuth() {
     // Validate token format
     try {
         const parts = token.split('_');
-        if (parts.length < 3) {
+        if (parts.length < 2) {
             throw new Error('Invalid token format');
         }
 
@@ -2515,6 +2515,7 @@ function populatePersonDropdown() {
         option.value = person.id;
         
         // Đảm bảo màu sắc option rõ ràng
+        if (person.is_alive) {
             option.style.color = '#1f2937'; // Còn sống: Màu đen
         } else {
             option.style.color = '#6b7280'; // Đã mất: Màu xám
