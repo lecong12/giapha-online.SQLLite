@@ -91,8 +91,8 @@ function initializeAndStartServer() {
                     job TEXT,
                     address TEXT,
                     member_type TEXT,
-                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )`,
                 `CREATE TABLE IF NOT EXISTS relationships (
                     id SERIAL PRIMARY KEY,
@@ -117,8 +117,8 @@ function initializeAndStartServer() {
                     content TEXT,
                     category TEXT,
                     is_pinned INTEGER DEFAULT 0,
-                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )`,
                 `CREATE TABLE IF NOT EXISTS activity_logs (
                     id SERIAL PRIMARY KEY,
@@ -130,7 +130,7 @@ function initializeAndStartServer() {
                     entity_type TEXT,
                     entity_name TEXT,
                     description TEXT,
-                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )`
             ];
 

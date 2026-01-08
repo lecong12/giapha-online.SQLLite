@@ -1,3 +1,6 @@
+// Load biến môi trường để tránh lỗi kết nối DB
+require('dotenv').config();
+
 const fs = require('fs');
 const csv = require('csv-parser');
 const db = require('./db');
@@ -36,16 +39,22 @@ const importData = async () => {
     let errorCount = 0;
 
     for (const row of rows) {
+        // Gộp thông tin cha/vợ chồng vào ghi chú vì bảng people dùng ID liên kết
+        let extraNotes = row.notes || '';
+        if (row.parent_name) extraNotes += ` | Cha/Mẹ: ${row.parent_name}`;
+        if (row.spouse_name) extraNotes += ` | Vợ/Chồng: ${row.spouse_name}`;
+
         const sql = `
-            INSERT INTO members (
-                full_name, gender, birth_date, death_date, generation, 
-                notes, phone, job, address, parent_name, spouse_name
+            INSERT INTO people (
+                owner_id, full_name, gender, birth_date, death_date, generation, 
+                notes, phone, job, address, is_alive
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
+        // Mặc định owner_id = 1 (Admin), is_alive = 1 (Còn sống)
         const params = [
-            row.full_name, row.gender, row.birth_date, row.death_date, row.generation,
-            row.notes, row.phone, row.job, row.address, row.parent_name, row.spouse_name
+            1, row.full_name, row.gender, row.birth_date, row.death_date, row.generation,
+            extraNotes, row.phone, row.job, row.address, 1
         ];
 
         // Dùng Promise để đợi DB xử lý xong dòng này mới qua dòng khác
