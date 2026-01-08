@@ -36,6 +36,8 @@ const importData = async () => {
 
     // Map để lưu Tên -> ID (Dùng để tra cứu ở bước 2)
     const nameToIdMap = {};
+    // Map phụ dùng key chữ thường để tra cứu không phân biệt hoa thường
+    const nameToIdMapLower = {};
     // Set để tránh trùng lặp quan hệ vợ chồng (A-B và B-A)
     const processedMarriages = new Set();
 
@@ -45,6 +47,13 @@ const importData = async () => {
     let errorCount = 0;
 
     for (const row of rows) {
+        // FIX: Luôn lưu tên Cha/Mẹ và Vợ/Chồng vào ghi chú để không bị mất thông tin nếu không link được ID
+        let extraNotes = row.notes || '';
+        if (row.parent_name) extraNotes += `\n[Cha/Mẹ: ${row.parent_name}]`;
+        if (row.spouse_name) extraNotes += `\n[Vợ/Chồng: ${row.spouse_name}]`;
+        // Xóa khoảng trắng thừa đầu cuối
+        extraNotes = extraNotes.trim();
+
         const sql = `
             INSERT INTO people (
                 owner_id, full_name, gender, birth_date, death_date, generation, 
@@ -55,7 +64,7 @@ const importData = async () => {
         // Mặc định owner_id = 1 (Admin), is_alive = 1 (Còn sống), member_type = 'blood' (Huyết thống)
         const params = [
             1, row.full_name, row.gender, row.birth_date, row.death_date, row.generation,
-            row.notes, row.phone, row.job, row.address, 1, 'blood'
+            extraNotes, row.phone, row.job, row.address, 1, 'blood'
         ];
 
         // Dùng Promise để đợi DB xử lý xong dòng này mới qua dòng khác
@@ -69,6 +78,7 @@ const importData = async () => {
                     // Lưu ID vừa tạo vào Map để dùng cho bước 2
                     if (this.lastID) {
                         nameToIdMap[row.full_name.trim()] = this.lastID;
+                        nameToIdMapLower[row.full_name.trim().toLowerCase()] = this.lastID;
                     }
                     successCount++;
                 }
@@ -82,12 +92,16 @@ const importData = async () => {
     let relationCount = 0;
 
     for (const row of rows) {
-        const myId = nameToIdMap[row.full_name.trim()];
+        const myName = row.full_name.trim();
+        const myId = nameToIdMap[myName];
         if (!myId) continue; // Nếu người này lỗi ở bước 1 thì bỏ qua
 
         // 2.1 Xử lý Cha/Mẹ (Parent)
-        if (row.parent_name && nameToIdMap[row.parent_name.trim()]) {
-            const parentId = nameToIdMap[row.parent_name.trim()];
+        if (row.parent_name) {
+            const pName = row.parent_name.trim();
+            const parentId = nameToIdMap[pName] || nameToIdMapLower[pName.toLowerCase()];
+            
+            if (parentId) {
             const sqlRel = `INSERT INTO relationships (parent_id, child_id, relation_type) VALUES (?, ?, 'blood')`;
             
             await new Promise(resolve => {
@@ -96,36 +110,45 @@ const importData = async () => {
                     resolve();
                 });
             });
+            } else {
+                console.warn(`⚠️ Không tìm thấy hồ sơ cha/mẹ: '${pName}' cho '${myName}'`);
+            }
         }
 
         // 2.2 Xử lý Vợ/Chồng (Spouse)
-        if (row.spouse_name && nameToIdMap[row.spouse_name.trim()]) {
-            const spouseId = nameToIdMap[row.spouse_name.trim()];
+        if (row.spouse_name) {
+            const sName = row.spouse_name.trim();
+            // Tìm ID bằng tên chính xác HOẶC tên chữ thường
+            const spouseId = nameToIdMap[sName] || nameToIdMapLower[sName.toLowerCase()];
             
-            // Xác định ai là chồng, ai là vợ dựa trên giới tính
-            let husbandId = myId;
-            let wifeId = spouseId;
-            
-            // Chuẩn hóa giới tính để so sánh chính xác hơn (chấp nhận 'nữ', 'nu', 'female')
-            const gender = (row.gender || '').trim().toLowerCase();
-            if (gender === 'nữ' || gender === 'nu' || gender === 'female') {
-                husbandId = spouseId;
-                wifeId = myId;
-            }
+            if (spouseId) {
+                // Xác định ai là chồng, ai là vợ dựa trên giới tính
+                let husbandId = myId;
+                let wifeId = spouseId;
+                
+                // Chuẩn hóa giới tính để so sánh chính xác hơn (chấp nhận 'nữ', 'nu', 'female')
+                const gender = (row.gender || '').trim().toLowerCase();
+                if (gender === 'nữ' || gender === 'nu' || gender === 'female') {
+                    husbandId = spouseId;
+                    wifeId = myId;
+                }
 
-            // Tạo key duy nhất cho cặp vợ chồng (VD: "10-15") để không insert 2 lần
-            const pairKey = [husbandId, wifeId].sort().join('-');
-            
-            if (!processedMarriages.has(pairKey)) {
-                processedMarriages.add(pairKey);
+                // Tạo key duy nhất cho cặp vợ chồng (VD: "10-15") để không insert 2 lần
+                const pairKey = [husbandId, wifeId].sort().join('-');
+                
+                if (!processedMarriages.has(pairKey)) {
+                    processedMarriages.add(pairKey);
 
-                const sqlMarr = `INSERT INTO marriages (husband_id, wife_id, marriage_date) VALUES (?, ?, ?)`;
-                await new Promise(resolve => {
-                    db.run(sqlMarr, [husbandId, wifeId, ''], (err) => {
-                        if (!err) relationCount++;
-                        resolve();
+                    const sqlMarr = `INSERT INTO marriages (husband_id, wife_id, marriage_date) VALUES (?, ?, ?)`;
+                    await new Promise(resolve => {
+                        db.run(sqlMarr, [husbandId, wifeId, ''], (err) => {
+                            if (!err) relationCount++;
+                            resolve();
+                        });
                     });
-                });
+                }
+            } else {
+                console.warn(`⚠️ Không tìm thấy hồ sơ vợ/chồng: '${sName}' cho '${myName}' (Đã lưu vào ghi chú)`);
             }
         }
     }
