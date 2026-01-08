@@ -476,11 +476,25 @@ async render(personId = null) {
     // --- VẼ ---
     let maxX = 0;
     let maxY = 0;
+    
+    // ✅ [MỚI] Xác định đường dẫn huyết thống (Ancestry Path) để highlight
+    const ancestorPath = new Set();
+    let curr = this.targetPersonId;
+    ancestorPath.add(curr);
+    // Leo ngược lên từ target để lấy danh sách ID tổ tiên trực hệ
+    let safety = 0;
+    while(safety < 100) {
+        const rel = this.relationships.find(r => r.child_id === curr);
+        if (!rel) break;
+        curr = rel.parent_id;
+        ancestorPath.add(curr);
+        safety++;
+    }
 
     // Vẽ đường nối
     this.nodesToRender.forEach(node => {
         if (node.childrenNodes.length > 0) {
-            this.drawForkConnection(mainGroup, node);
+            this.drawForkConnection(mainGroup, node, ancestorPath);
         }
     });
 
@@ -513,7 +527,29 @@ async render(personId = null) {
     const finalH = Math.max(maxY + this.config.padding, 800);
     this.svg.setAttribute('viewBox', `0 0 ${finalW} ${finalH}`);
     this.applyTransform();
+    
+    // ✅ [MỚI] Tự động Pan/Zoom vào người được chọn
+    this.centerOnTarget();
 }
+
+    // ✅ Hàm căn giữa vào người được chọn
+    centerOnTarget() {
+        const targetNode = this.nodesToRender.find(n => n.person.id === this.targetPersonId);
+        if (targetNode) {
+            const svgWidth = this.svg.clientWidth || 800;
+            const svgHeight = this.svg.clientHeight || 600;
+            
+            // Tọa độ tâm của thẻ target
+            const nodeCenterX = targetNode.x + this.config.cardWidth / 2;
+            const nodeCenterY = targetNode.y + this.config.cardHeight / 2;
+            
+            // Tính toán vị trí để đưa node vào giữa màn hình
+            this.view.pointX = (svgWidth / 2) - (nodeCenterX * this.scale);
+            this.view.pointY = (svgHeight / 2) - (nodeCenterY * this.scale);
+            
+            this.applyTransform();
+        }
+    }
 
     // --- CÁC HÀM LOGIC CÂY (GIỮ NGUYÊN) ---
 
@@ -590,7 +626,7 @@ async render(personId = null) {
 
     // --- CÁC HÀM VẼ (GIỮ NGUYÊN) ---
 
-    drawForkConnection(group, node) {
+    drawForkConnection(group, node, ancestorPath = new Set()) {
         const startY = node.y + this.config.cardHeight;
         let startX;
 
@@ -602,7 +638,11 @@ async render(personId = null) {
 
         const midY = startY + this.config.gapY / 2;
 
-        this.createLine(group, startX, startY, startX, midY);
+        // Kiểm tra xem đường này có thuộc dòng máu trực hệ của target không
+        // Node hiện tại phải nằm trong path (là tổ tiên)
+        const isNodeInPath = ancestorPath.has(node.person.id);
+
+        this.createLine(group, startX, startY, startX, midY, isNodeInPath);
 
         const firstChild = node.childrenNodes[0];
         const lastChild = node.childrenNodes[node.childrenNodes.length - 1];
@@ -616,22 +656,31 @@ async render(personId = null) {
         const minChildX = getChildCenterX(firstChild);
         const maxChildX = getChildCenterX(lastChild);
 
-        this.createLine(group, minChildX, midY, maxChildX, midY);
+        // Đường ngang không cần highlight đặc biệt, hoặc highlight nếu node cha là tổ tiên
+        this.createLine(group, minChildX, midY, maxChildX, midY, false);
 
         node.childrenNodes.forEach(child => {
             const childX = getChildCenterX(child);
-            this.createLine(group, childX, midY, childX, child.y);
+            
+            // Highlight đường đi xuống con nếu con cũng nằm trong path (tức là con là cha/ông của target, hoặc chính là target)
+            const isChildInPath = isNodeInPath && ancestorPath.has(child.person.id);
+            
+            this.createLine(group, childX, midY, childX, child.y, isChildInPath);
         });
     }
 
-    createLine(group, x1, y1, x2, y2) {
+    createLine(group, x1, y1, x2, y2, isHighlight = false) {
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.setAttribute('x1', x1);
         line.setAttribute('y1', y1);
         line.setAttribute('x2', x2);
         line.setAttribute('y2', y2);
-        line.setAttribute('stroke', this.config.colors.line);
-        line.setAttribute('stroke-width', '2');
+        
+        // Màu cam đậm nếu là đường huyết thống, màu xanh nhạt nếu bình thường
+        line.setAttribute('stroke', isHighlight ? '#f97316' : this.config.colors.line);
+        line.setAttribute('stroke-width', isHighlight ? '4' : '2');
+        if (isHighlight) line.setAttribute('stroke-linecap', 'round');
+        
         group.appendChild(line);
     }
 
