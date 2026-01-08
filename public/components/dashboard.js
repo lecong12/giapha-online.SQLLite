@@ -101,6 +101,12 @@ function handleTabSwitch(event) {
     if (targetSelector === '#tree') {
         if (!treeRenderer) {
             setTimeout(initFamilyTree, 100);
+        } else {
+            // Cập nhật lại dữ liệu và dropdown khi quay lại tab cây (để hiển thị thành viên mới thêm)
+            setTimeout(async () => {
+                await treeRenderer.loadData(treeRenderer.selectedPersonId);
+                populatePersonDropdown();
+            }, 100);
         }
     }
 }
@@ -587,7 +593,7 @@ if (member.is_alive) {
   // Người còn sống → Hiển thị tuổi
   const age = calculateAge(member.birth_date);
   statusText = age > 0 ? `${age} tuổi` : 'N/A';
-  statusColor = '#10b981'; // Màu xanh
+  statusColor = age > 0 ? '#10b981' : '#f59e0b'; // Màu xanh hoặc cam
 } else {
   // Người đã mất
   statusText = 'Đã mất';
@@ -964,6 +970,7 @@ async function viewMemberDetail(memberId) {
       : `<div style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#f97316,#fbbf24);display:flex;align-items:center;justify-content:center;color:white;font-size:36px;font-weight:bold;">${member.full_name.charAt(0)}</div>`;
 
 let statusText = '';
+let statusColor = '';
 
 if (member.is_alive) {
   const age = calculateAge(member.birth_date);
@@ -993,7 +1000,7 @@ if (member.is_alive) {
         <div style="text-align:center;">
           ${avatarHtml}
           <h2 style="margin-top:12px;">${member.full_name}</h2>
-          <p style="color:#666;">${statusText}</p>
+          <p style="color:${statusColor};font-weight:600;">${statusText}</p>
         </div>
         <div style="grid-column:1/-1;"><strong>Loại thành viên:</strong> ${memberTypeText}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -2483,6 +2490,13 @@ async function initFamilyTree() {
 function populatePersonDropdown() {
     const select = document.getElementById('personSelect');
     
+    // ✅ Tự động hiển thị cây khi chọn người (không cần bấm nút Xem)
+    select.onchange = showSelectedPersonTree;
+
+    // ✅ Sửa lỗi xung đột màu sắc (ép buộc chữ đen nền trắng cho dropdown)
+    select.style.color = '#1f2937';
+    select.style.backgroundColor = '#ffffff';
+
     if (!treeRenderer || !treeRenderer.allPeople || treeRenderer.allPeople.length === 0) {
         select.innerHTML = '<option value="">❌ Không có dữ liệu</option>';
         return;
@@ -2499,6 +2513,10 @@ function populatePersonDropdown() {
     sorted.forEach(person => {
         const option = document.createElement('option');
         option.value = person.id;
+        
+        // Đảm bảo màu sắc option rõ ràng
+        option.style.color = '#1f2937';
+        option.style.backgroundColor = '#ffffff';
         
         const name = person.full_name || 'Không tên';
         const gen = person.generation || '?';
