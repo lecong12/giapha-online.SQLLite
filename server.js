@@ -165,7 +165,7 @@ function initializeAndStartServer() {
                     if (!row) {
                         const passHash = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92';
                         const insertSql = `INSERT INTO users (email, password, password_hash, full_name, role, viewer_code) VALUES (?, ?, ?, ?, 'owner', 'ADMIN12345')`;
-                        dbAdapter.run(insertSql, ['admin@gmail.com', passHash, passHash, 'Admin Mặc Định'], (errInsert) => {
+                        dbAdapter.run(insertSql, ['admin@gmail.com', passHash, passHash, 'Admin'], (errInsert) => {
                             if (errInsert) {
                                 console.error("❌ Lỗi tạo tài khoản Admin:", errInsert.message);
                                 process.exit(1);
