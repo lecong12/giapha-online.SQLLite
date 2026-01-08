@@ -162,7 +162,18 @@ async function loadDashboardStats() {
     const total = stats.total || 0;
     const males = stats.males || 0;
     const females = stats.females || 0;
-    const maxGen = stats.maxGeneration || 0;
+    let maxGen = stats.maxGeneration || 0;
+
+    // ✅ Fix: Tự động tính tổng số đời từ danh sách thế hệ nếu API trả về 0
+    if (maxGen === 0 && stats.generations && Array.isArray(stats.generations)) {
+        const validGens = stats.generations
+            .map(g => parseInt(g.generation))
+            .filter(g => !isNaN(g));
+            
+        if (validGens.length > 0) {
+            maxGen = Math.max(...validGens);
+        }
+    }
 
     // 1. Gán số liệu vào các ô
     const totalEl = document.getElementById('totalMembers');
@@ -633,7 +644,7 @@ if (member.member_type === 'in_law') {
        <div class="member-header">
         ${avatarHtml}
          <div>
-           <span class="generation-badge-small">Đời ${member.generation || 'N/A'}</span>
+           <span class="generation-badge-small">Đời thứ ${member.generation || 'N/A'}</span>
             ${memberTypeBadge}
           </div>
          </div>
@@ -2520,10 +2531,14 @@ function populatePersonDropdown() {
         
         const name = person.full_name || 'Không tên';
         const gen = person.generation || '?';
-        const year = person.birth_date ? new Date(person.birth_date).getFullYear() : '?';
+        let year = '?';
+        if (person.birth_date && person.birth_date !== 'unknown') {
+            const y = new Date(person.birth_date).getFullYear();
+            if (!isNaN(y)) year = y;
+        }
         const status = person.is_alive ? '✅' : '⚰️';
         
-        option.textContent = `${status} ${name} (Đời thứ ${gen})`;
+        option.textContent = `${status} ${name} - Đời thứ ${gen}`;
         
         if (person.id === treeRenderer.selectedPersonId) {
             option.selected = true;
