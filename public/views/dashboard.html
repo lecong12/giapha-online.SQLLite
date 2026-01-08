@@ -29,10 +29,20 @@
     }
 }
 
+/* ✅ Cố định thanh menu (tabs) */
+.tabs-container {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 10px 0;
+}
+
 /* ✅ Cố định thanh công cụ (Tìm kiếm, Thêm thành viên) khi cuộn */
 .members-header {
     position: sticky;
-    top: 0;
+    top: 65px; /* Đẩy xuống dưới thanh tabs (tránh bị che) */
     z-index: 99;
     background-color: #ffffff;
     padding: 15px 0;
