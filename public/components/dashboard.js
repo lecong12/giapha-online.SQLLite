@@ -620,9 +620,11 @@ if (member.is_alive) {
         <div class="member-actions">
           
           <button class="btn-edit" onclick="openEditMemberModal(${member.id})">
+          <button class="btn-edit" onclick="openEditMemberModal(${member.id})" style="padding: 4px 8px; font-size: 12px;">
             <i class="fas fa-edit"></i> Sửa
           </button>
           <button class="btn-delete" onclick="deleteMember(${member.id})">
+          <button class="btn-delete" onclick="deleteMember(${member.id})" style="padding: 4px 8px; font-size: 12px;">
             <i class="fas fa-trash"></i> Xóa
           </button>
         </div>
@@ -1912,6 +1914,7 @@ if (canEdit || canDelete) {
     actionsHtml += `
       <button class="btn-edit" onclick="event.stopPropagation(); openEditPostModal(${post.id})" 
               style="padding: 6px 12px; background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: white; border: none; border-radius: 6px; cursor: pointer;">
+              style="padding: 4px 8px; font-size: 12px; background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: white; border: none; border-radius: 6px; cursor: pointer;">
         <i class="fas fa-edit"></i> Sửa
       </button>
     `;
@@ -1921,6 +1924,7 @@ if (canEdit || canDelete) {
     actionsHtml += `
       <button class="btn-delete" onclick="event.stopPropagation(); deletePost(${post.id})" 
               style="padding: 6px 12px; background: linear-gradient(135deg, #ef4444, #f87171); color: white; border: none; border-radius: 6px; cursor: pointer;">
+              style="padding: 4px 8px; font-size: 12px; background: linear-gradient(135deg, #ef4444, #f87171); color: white; border: none; border-radius: 6px; cursor: pointer;">
         <i class="fas fa-trash"></i> Xóa
       </button>
     `;
@@ -2143,6 +2147,7 @@ if (canEdit || canDelete) {
     buttonsHtml += `
       <button class="btn-edit" onclick="closeViewPostModal(); openEditPostModal(${post.id});" 
               style="padding: 8px 16px; background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: white; border: none; border-radius: 8px; cursor: pointer;">
+              style="padding: 6px 12px; font-size: 13px; background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: white; border: none; border-radius: 8px; cursor: pointer;">
         <i class="fas fa-edit"></i> Sửa
       </button>
     `;
@@ -2152,6 +2157,7 @@ if (canEdit || canDelete) {
     buttonsHtml += `
       <button class="btn-delete" onclick="closeViewPostModal(); deletePost(${post.id});" 
               style="padding: 8px 16px; background: linear-gradient(135deg, #ef4444, #f87171); color: white; border: none; border-radius: 8px; cursor: pointer;">
+              style="padding: 6px 12px; font-size: 13px; background: linear-gradient(135deg, #ef4444, #f87171); color: white; border: none; border-radius: 8px; cursor: pointer;">
         <i class="fas fa-trash"></i> Xóa
       </button>
     `;
