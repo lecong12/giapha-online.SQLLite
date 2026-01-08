@@ -2812,6 +2812,7 @@ function setupSearchableDropdown(searchInputId, hiddenInputId, resultsId, data, 
 function updateGenerationLogic() {
     const parentId = document.getElementById('memberParent').value;
     const spouseId = document.getElementById('memberSpouse').value;
+    const spouseNameText = document.getElementById('memberSpouseSearch').value.trim();
     const generationSelect = document.getElementById('memberGeneration');
     const generationGroup = generationSelect.closest('.form-group');
 
@@ -2839,7 +2840,24 @@ function updateGenerationLogic() {
             generationSelect.disabled = true;
         }
     }
-    // TRƯỜNG HỢP 3: Không có cả cha/mẹ và vợ/chồng → Thủy tổ
+    // TRƯỜNG HỢP 3: Có tên vợ/chồng (Text) nhưng không có ID → Cho phép chọn thế hệ
+    else if (spouseNameText) {
+        generationGroup.style.display = 'block';
+        generationSelect.disabled = false;
+
+        // Tính toán max generation để tạo dropdown (cho phép chọn từ 1 đến max + 1)
+        const maxGen = allMembers.reduce((max, m) => Math.max(max, m.generation || 0), 0) || 1;
+        const limit = maxGen + 1;
+        const currentVal = generationSelect.value;
+
+        let html = '';
+        for (let i = 1; i <= limit; i++) {
+            html += `<option value="${i}">Thế hệ ${i}</option>`;
+        }
+        generationSelect.innerHTML = html;
+        if (currentVal && currentVal <= limit) generationSelect.value = currentVal;
+    }
+    // TRƯỜNG HỢP 4: Không có cả cha/mẹ và vợ/chồng → Thủy tổ
     else {
         generationGroup.style.display = 'block';
         generationSelect.innerHTML = '<option value="1">Thế hệ 1 (Thủy tổ)</option>';
