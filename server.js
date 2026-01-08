@@ -155,7 +155,7 @@ function initializeAndStartServer() {
 
             function checkAdminAndStart() {
                 // 2. Tạo tài khoản Admin mặc định nếu chưa có
-                const checkSql = "SELECT id FROM users WHERE email = 'admin@gmail.com'";
+                const checkSql = "SELECT id, full_name FROM users WHERE email = 'admin@gmail.com'";
                 dbAdapter.get(checkSql, (err, row) => {
                     if (err) {
                         console.error("❌ Lỗi kiểm tra admin:", err.message);
@@ -174,7 +174,15 @@ function initializeAndStartServer() {
                             startListening(); // Bắt đầu lắng nghe khi đã tạo xong user
                         });
                     } else {
-                        startListening(); // Bắt đầu lắng nghe nếu user đã tồn tại
+                        // Nếu tài khoản đã tồn tại nhưng tên vẫn là "Admin Mặc Định", hãy sửa lại
+                        if (row.full_name === 'Admin Mặc Định') {
+                            dbAdapter.run("UPDATE users SET full_name = 'Admin' WHERE email = 'admin@gmail.com'", () => {
+                                console.log("✅ Đã cập nhật tên hiển thị từ 'Admin Mặc Định' thành 'Admin'");
+                                startListening();
+                            });
+                        } else {
+                            startListening(); // Bắt đầu lắng nghe nếu user đã tồn tại và tên đúng
+                        }
                     }
                 });
             }
