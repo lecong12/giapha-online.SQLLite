@@ -56,9 +56,8 @@ class DatabaseAdapter {
         let newSql = sql.trim();
 
         // 1. Xóa dấu chấm phẩy ở cuối (để tránh lỗi khi nối chuỗi RETURNING)
-        if (newSql.endsWith(';')) {
-            newSql = newSql.slice(0, -1);
-        }
+        // FIX: Dùng regex để xóa dấu chấm phẩy và các khoảng trắng thừa ở cuối
+        newSql = newSql.replace(/;\s*$/, "");
 
         // 2. Thay thế dấu ? bằng $1, $2, $3... (Chuẩn PostgreSQL)
         newSql = newSql.replace(/\?/g, () => `$${i++}`);
@@ -102,7 +101,8 @@ class DatabaseAdapter {
                 let lastID = 0;
                 if (res && res.rows && res.rows.length > 0) {
                     // Lấy ID từ dòng cuối cùng (thường là dòng vừa insert)
-                    lastID = res.rows[res.rows.length - 1].id;
+                    const lastRow = res.rows[res.rows.length - 1];
+                    lastID = lastRow.id || 0;
                 }
                 
                 const context = {
@@ -156,6 +156,12 @@ class DatabaseAdapter {
             }
 
             const rows = res ? res.rows : [];
+            
+            // DEBUG: In ra keys của dòng đầu tiên để kiểm tra vấn đề chữ hoa/thường
+            if (rows.length > 0) {
+                console.log("🔍 DEBUG (All): Tên cột trả về từ DB:", Object.keys(rows[0]));
+            }
+
             if (callback) callback(null, rows);
         });
     }
