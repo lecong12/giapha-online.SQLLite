@@ -826,6 +826,9 @@ async function loadParentOptions(selectedId = null) {
   select.innerHTML = '<option value="">-- Không có --</option>';
   
   allMembers.forEach(m => {
+    // ✅ FIX: Không hiển thị chính mình trong danh sách cha mẹ
+    if (editingMemberId && m.id === editingMemberId) return;
+
     const option = document.createElement('option');
     option.value = m.id;
     option.textContent = `${m.full_name} (Đời ${m.generation || 'N/A'})`;
@@ -844,6 +847,9 @@ async function loadSpouseOptions(selectedId = null) {
   select.innerHTML = '<option value="">-- Không có --</option>';
   
   allMembers.forEach(m => {
+    // ✅ FIX: Không hiển thị chính mình trong danh sách vợ chồng
+    if (editingMemberId && m.id === editingMemberId) return;
+
     const option = document.createElement('option');
     option.value = m.id;
     option.textContent = `${m.full_name} (${m.gender})`;

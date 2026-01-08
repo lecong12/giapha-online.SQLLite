@@ -696,6 +696,7 @@ async render(personId = null) {
 
         const bgColor = isDead ? this.config.colors.deadBg : (isMale ? this.config.colors.maleBg : this.config.colors.femaleBg);
         const strokeColor = isTarget ? '#f59e0b' : (isMale ? this.config.colors.maleBorder : this.config.colors.femaleBorder); 
+        const textColor = isDead ? this.config.colors.deadText : this.config.colors.textName;
 
         // Background
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
