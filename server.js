@@ -52,7 +52,7 @@ function initializeAndStartServer() {
             // Danh sách các bảng cần tạo
             const tableSchemas = [
                 `CREATE TABLE IF NOT EXISTS users (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT, -- Adapter sẽ tự đổi thành SERIAL cho Postgres
+                    id SERIAL PRIMARY KEY,
                     email TEXT UNIQUE,
                     password TEXT,
                     password_hash TEXT,
@@ -62,7 +62,7 @@ function initializeAndStartServer() {
                     viewer_code TEXT
                 )`,
                 `CREATE TABLE IF NOT EXISTS people (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id SERIAL PRIMARY KEY,
                     owner_id INTEGER,
                     full_name TEXT,
                     gender TEXT,
@@ -81,13 +81,13 @@ function initializeAndStartServer() {
                     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )`,
                 `CREATE TABLE IF NOT EXISTS relationships (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id SERIAL PRIMARY KEY,
                     parent_id INTEGER,
                     child_id INTEGER,
                     relation_type TEXT
                 )`,
                 `CREATE TABLE IF NOT EXISTS marriages (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id SERIAL PRIMARY KEY,
                     husband_id INTEGER,
                     wife_id INTEGER,
                     marriage_date TEXT,
@@ -95,7 +95,7 @@ function initializeAndStartServer() {
                     notes TEXT
                 )`,
                 `CREATE TABLE IF NOT EXISTS posts (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id SERIAL PRIMARY KEY,
                     owner_id INTEGER,
                     author_id INTEGER,
                     author_role TEXT,
@@ -107,7 +107,7 @@ function initializeAndStartServer() {
                     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )`,
                 `CREATE TABLE IF NOT EXISTS activity_logs (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id SERIAL PRIMARY KEY,
                     owner_id INTEGER,
                     actor_id INTEGER,
                     actor_role TEXT,
