@@ -24,6 +24,20 @@ app.use("/api/viewers", require("./src/routes/viewerRoutes"));
 app.use("/api/posts", require("./src/routes/postsRoutes"));
 app.use("/api/activities", require("./src/routes/activityRoutes"));
 
+// ROUTE KIỂM TRA DATABASE (Thêm đoạn này để test)
+app.get('/api/db-check', (req, res) => {
+    dbAdapter.get("SELECT version()", (err, row) => {
+        if (err) {
+            res.status(500).json({ status: 'Lỗi kết nối', error: err.message });
+        } else {
+            res.json({ 
+                status: '✅ Đang chạy PostgreSQL', 
+                version: row ? row.version : 'Không xác định' 
+            });
+        }
+    });
+});
+
 // HTML ROUTES
 app.get("/", (req, res) => {
     const rootPath = path.join(PUBLIC_DIR, "views", "root.html");
