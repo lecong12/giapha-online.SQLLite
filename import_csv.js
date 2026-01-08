@@ -36,6 +36,8 @@ const importData = async () => {
 
     // Map để lưu Tên -> ID (Dùng để tra cứu ở bước 2)
     const nameToIdMap = {};
+    // Set để tránh trùng lặp quan hệ vợ chồng (A-B và B-A)
+    const processedMarriages = new Set();
 
     // --- BƯỚC 1: INSERT NGƯỜI VÀO BẢNG PEOPLE ---
     console.log("🔹 BƯỚC 1: Đang tạo hồ sơ thành viên...");
@@ -47,7 +49,7 @@ const importData = async () => {
             INSERT INTO people (
                 owner_id, full_name, gender, birth_date, death_date, generation, 
                 notes, phone, job, address, is_alive, member_type
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
         // Mặc định owner_id = 1 (Admin), is_alive = 1 (Còn sống), member_type = 'blood' (Huyết thống)
@@ -103,19 +105,28 @@ const importData = async () => {
             // Xác định ai là chồng, ai là vợ dựa trên giới tính
             let husbandId = myId;
             let wifeId = spouseId;
-            if (row.gender === 'Nữ') {
+            
+            // Chuẩn hóa giới tính để so sánh chính xác hơn (chấp nhận 'nữ', 'nu', 'female')
+            const gender = (row.gender || '').trim().toLowerCase();
+            if (gender === 'nữ' || gender === 'nu' || gender === 'female') {
                 husbandId = spouseId;
                 wifeId = myId;
             }
 
-            const sqlMarr = `INSERT INTO marriages (husband_id, wife_id, marriage_date) VALUES (?, ?, ?)`;
-            await new Promise(resolve => {
-                // Kiểm tra trùng lặp đơn giản bằng cách cứ insert, nếu lỗi thì thôi (hoặc insert blind)
-                db.run(sqlMarr, [husbandId, wifeId, ''], (err) => {
-                    if (!err) relationCount++;
-                    resolve();
+            // Tạo key duy nhất cho cặp vợ chồng (VD: "10-15") để không insert 2 lần
+            const pairKey = [husbandId, wifeId].sort().join('-');
+            
+            if (!processedMarriages.has(pairKey)) {
+                processedMarriages.add(pairKey);
+
+                const sqlMarr = `INSERT INTO marriages (husband_id, wife_id, marriage_date) VALUES (?, ?, ?)`;
+                await new Promise(resolve => {
+                    db.run(sqlMarr, [husbandId, wifeId, ''], (err) => {
+                        if (!err) relationCount++;
+                        resolve();
+                    });
                 });
-            });
+            }
         }
     }
 
