@@ -632,6 +632,9 @@ if (member.is_alive) {
     const userRole = localStorage.getItem('userRole');
     let actionsHtml = '';
     
+    // ✅ Tính toán tên vợ/chồng (ưu tiên object đã link, fallback về text)
+    const spouseName = (member.spouse && member.spouse.full_name) ? member.spouse.full_name : (member.spouse_name || '');
+
     if (userRole === 'owner') {
       actionsHtml = `
         <div class="member-actions">
@@ -669,7 +672,7 @@ if (member.member_type === 'in_law') {
         <div class="member-info">
           <p><i class="fas fa-birthday-cake"></i> ${member.birth_date || 'N/A'}</p>
           <p><i class="fas fa-heart"></i> <span style="color:${statusColor}">${statusText}</span></p>
-          ${(member.spouse_name || (member.spouse && member.spouse.spouse_name)) ? `<p><i class="fas fa-ring" style="color:#ec4899;"></i> ${member.spouse_name || member.spouse.spouse_name}</p>` : ''}
+          ${spouseName ? `<p><i class="fas fa-ring" style="color:#ec4899;"></i> ${spouseName}</p>` : ''}
           ${member.phone ? `<p><i class="fas fa-phone"></i> ${member.phone}</p>` : ''}
           ${member.job ? `<p><i class="fas fa-briefcase"></i> ${member.job}</p>` : ''}
         </div>
@@ -802,9 +805,9 @@ document.getElementById('isDeceasedUnknown').checked = isDeceasedUnknown;
     document.getElementById('memberParentSearch').value = parent ? parent.full_name : '';
     document.getElementById('memberParent').value = parent ? parent.id : '';
     
-    // ✅ Fix: Hiển thị tên vợ/chồng từ text import nếu chưa có liên kết ID
-    const displaySpouseName = (spouse && spouse.spouse_name) ? spouse.spouse_name : (member.spouse_name || '');
-    const displaySpouseId = (spouse && spouse.spouse_id) ? spouse.spouse_id : '';
+    // ✅ Fix: Hiển thị tên vợ/chồng (ưu tiên full_name từ object, fallback text)
+    const displaySpouseName = (spouse && spouse.full_name) ? spouse.full_name : (member.spouse_name || '');
+    const displaySpouseId = (spouse && spouse.id) ? spouse.id : '';
     document.getElementById('memberSpouseSearch').value = displaySpouseName;
     document.getElementById('memberSpouse').value = displaySpouseId;
 
@@ -1011,9 +1014,10 @@ if (member.is_alive) {
       ? member.parents.map(p => `<span>${p.full_name}</span>`).join(', ')
       : 'Không có';
 
-    // ✅ Cải tiến: Xử lý nhiều cấu trúc dữ liệu cho vợ/chồng
-    const spouseName = member.spouse_name || (member.spouse && member.spouse.spouse_name);
-    const spouseId = member.spouse_id || (member.spouse && member.spouse.spouse_id);
+    // ✅ Cải tiến: Xử lý nhiều cấu trúc dữ liệu cho vợ/chồng (ưu tiên full_name từ object)
+    const spouseObj = member.spouse;
+    const spouseName = (spouseObj && spouseObj.full_name) ? spouseObj.full_name : (member.spouse_name || '');
+    const spouseId = (spouseObj && spouseObj.id) ? spouseObj.id : (member.spouse_id || '');
 
     const spouseHtml = spouseName
       ? (spouseId ? `<a href="#" onclick="viewMemberDetail(${spouseId}); return false;" style="color:#0ea5e9;text-decoration:none;font-weight:600;">${spouseName}</a>` : `<span>${spouseName}</span>`)
