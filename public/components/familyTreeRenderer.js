@@ -28,7 +28,7 @@ class FamilyTreeRenderer {
             
             gapX: 40,
             gapY: 100,
-            spouseGap: 10,
+            spouseGap: 30, // ✅ Tăng khoảng cách để vẽ đường nối vợ chồng
 
             padding: 80,
 
@@ -505,6 +505,10 @@ async render(personId = null) {
         if (node.spouse) {
             const spouseX = node.x + this.config.cardWidth + this.config.spouseGap;
             this.drawCard(mainGroup, node.spouse, spouseX, node.y);
+            
+            // ✅ Vẽ đường nối vợ chồng
+            this.drawSpouseConnection(mainGroup, node.x, spouseX, node.y);
+            
             maxX = Math.max(maxX, spouseX + this.config.cardWidth);
         } else {
             maxX = Math.max(maxX, node.x + this.config.cardWidth);
@@ -684,6 +688,31 @@ async render(personId = null) {
         group.appendChild(line);
     }
 
+    // ✅ Hàm vẽ đường nối vợ chồng
+    drawSpouseConnection(group, x1, x2, y) {
+        const lineY = y + this.config.cardHeight / 2;
+        const startX = x1 + this.config.cardWidth;
+        const endX = x2;
+        
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', startX);
+        line.setAttribute('y1', lineY);
+        line.setAttribute('x2', endX);
+        line.setAttribute('y2', lineY);
+        line.setAttribute('stroke', '#f472b6'); // Màu hồng nhạt cho hôn nhân
+        line.setAttribute('stroke-width', '2');
+        group.appendChild(line);
+
+        // Thêm chấm tròn ở giữa
+        const cx = (startX + endX) / 2;
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', cx);
+        circle.setAttribute('cy', lineY);
+        circle.setAttribute('r', '4');
+        circle.setAttribute('fill', '#f472b6');
+        group.appendChild(circle);
+    }
+
     drawCard(group, person, x, y) {
         const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         g.setAttribute('transform', `translate(${x}, ${y})`);
@@ -713,12 +742,11 @@ async render(personId = null) {
         const clipPath = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
         clipPath.setAttribute('id', clipId);
         
-        const clipRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        clipRect.setAttribute('x', (this.config.cardWidth - this.config.avatarSize) / 2);
-        clipRect.setAttribute('y', 15);
-        clipRect.setAttribute('width', this.config.avatarSize);
-        clipRect.setAttribute('height', this.config.avatarSize);
-        clipRect.setAttribute('rx', '8');
+        // ✅ Avatar hình tròn
+        const clipRect = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        clipRect.setAttribute('cx', this.config.cardWidth / 2);
+        clipRect.setAttribute('cy', 15 + this.config.avatarSize / 2);
+        clipRect.setAttribute('r', this.config.avatarSize / 2);
         clipPath.appendChild(clipRect);
         defs.appendChild(clipPath);
         g.appendChild(defs);
@@ -737,12 +765,11 @@ async render(personId = null) {
         img.setAttribute('href', avatarUrl);
         g.appendChild(img);
 
-        const imgBorder = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        imgBorder.setAttribute('x', (this.config.cardWidth - this.config.avatarSize) / 2);
-        imgBorder.setAttribute('y', 15);
-        imgBorder.setAttribute('width', this.config.avatarSize);
-        imgBorder.setAttribute('height', this.config.avatarSize);
-        imgBorder.setAttribute('rx', '8');
+        // ✅ Viền avatar hình tròn
+        const imgBorder = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        imgBorder.setAttribute('cx', this.config.cardWidth / 2);
+        imgBorder.setAttribute('cy', 15 + this.config.avatarSize / 2);
+        imgBorder.setAttribute('r', this.config.avatarSize / 2);
         imgBorder.setAttribute('fill', 'none');
         imgBorder.setAttribute('stroke', strokeColor);
         imgBorder.setAttribute('stroke-width', '1');
@@ -1214,6 +1241,9 @@ renderMultipleTrees(trees) {
             if (node.spouse) {
                 const spouseX = node.x + this.config.cardWidth + this.config.spouseGap;
                 this.drawCard(mainGroup, node.spouse, spouseX, node.y);
+                
+                // ✅ Vẽ đường nối vợ chồng cho chế độ xem toàn bộ
+                this.drawSpouseConnection(mainGroup, node.x, spouseX, node.y);
             }
         });
         
