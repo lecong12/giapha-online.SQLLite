@@ -304,7 +304,7 @@ function renderGenerationPie(genDist, total) {
         colorBox.style.background = getGenerationColor(idx);
 
         const label = document.createElement('span');
-        label.textContent = `Đời ${seg.generation}: ${seg.count} (~${seg.percent}%)`;
+        label.textContent = `Đời thứ ${seg.generation}: ${seg.count} (~${seg.percent}%)`;
 
         row.appendChild(colorBox);
         row.appendChild(label);
