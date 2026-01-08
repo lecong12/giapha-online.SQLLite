@@ -850,6 +850,7 @@ async function submitMemberForm(event) {
 
   const parentId = document.getElementById('memberParent').value;
   const spouseId = document.getElementById('memberSpouse').value;
+  const spouseNameText = document.getElementById('memberSpouseSearch').value.trim();
   const generation = document.getElementById('memberGeneration').value;
 
   // ✅ VALIDATION MỚI
@@ -866,7 +867,7 @@ async function submitMemberForm(event) {
   // TH2: Đời > 1
   else {
     // Phải có ít nhất 1 trong 2: cha/mẹ HOẶC vợ/chồng
-    if (!parentId && !spouseId) {
+    if (!parentId && !spouseId && !spouseNameText) {
       alert('⚠️ Thành viên đời > 1 phải có cha/mẹ (con ruột) hoặc vợ/chồng (con dâu/rễ)');
       return;
     }
@@ -911,7 +912,8 @@ const data = {
     notes: document.getElementById('memberNote').value.trim(),
     parent_id: parentId || null,
     spouse_id: spouseId || null,
-    member_type: parentId ? 'blood' : (spouseId ? 'in_law' : 'blood') // ✅ Logic: Có cha mẹ -> Blood, Không cha mẹ mà có vợ chồng -> In-law, Còn lại (Thủy tổ) -> Blood
+    spouse_name: spouseNameText || null,
+    member_type: parentId ? 'blood' : ((spouseId || spouseNameText) ? 'in_law' : 'blood')
 };
 
   if (!data.full_name) {
