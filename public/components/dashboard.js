@@ -1902,11 +1902,37 @@ function renderPosts(posts) {
       : '<span style="background: #fed7aa; color: #c2410c; padding: 2px 8px; border-radius: 4px; font-size: 11px;">👑 Admin</span>';
 
     // Kiểm tra quyền sửa/xóa
-    const canEdit = (postcle
+    const canEdit = (post.author_id === userId);
+    const canDelete = (userRole === 'owner') || (post.author_id === userId);
+
+    let actionsHtml = '';
     if (canEdit || canDelete) {
       actionsHtml = `<div class="post-actions" style="display: flex; gap: 8px;">`;
       
- i)     actionsHtml += `
+      if (canEdit) {
+        actionsHtml += `
+          <button class="btn-edit" onclick="event.stopPropagation(); openEditPostModal(${post.id})" 
+                  style="padding: 4px 8px; font-size: 12px; background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: white; border: none; border-radius: 6px; cursor: pointer;">
+            <i class="fas fa-edit"></i> Sửa
+          </button>
+        `;
+      }
+      
+      if (canDelete) {
+        actionsHtml += `
+          <button class="btn-delete" onclick="event.stopPropagation(); deletePost(${post.id})" 
+                  style="padding: 4px 8px; font-size: 12px; background: linear-gradient(135deg, #ef4444, #f87171); color: white; border: none; border-radius: 6px; cursor: pointer;">
+            <i class="fas fa-trash"></i> Xóa
+          </button>
+        `;
+      }
+      
+      actionsHtml += `</div>`;
+    }
+
+    card.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+        <div>
          <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 8px 0;">${post.title}</h3>
           <div style="display: flex; gap: 12px; font-size: 12px; color: #666; flex-wrap: wrap;">
             <span>${icon} ${categoryName}</span>
