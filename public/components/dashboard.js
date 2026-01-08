@@ -120,13 +120,6 @@ function handleTabSwitch(event) {
             }, 100);
         }
     }
-
-    // ✅ Cập nhật hiển thị công cụ trên thanh menu
-    const membersControls = document.getElementById('membersControls');
-    const postsControls = document.getElementById('postsControls');
-    
-    if (membersControls) membersControls.style.display = targetSelector === '#members' ? 'flex' : 'none';
-    if (postsControls) postsControls.style.display = targetSelector === '#posts' ? 'flex' : 'none';
 }
 
 /* ==========================================================
@@ -2262,14 +2255,6 @@ showViewerNotice();
         if (defaultTarget) {
             defaultTarget.style.display = 'block';
         }
-        
-        // ✅ Hiển thị controls cho tab mặc định
-        const target = defaultActiveButton.dataset.target;
-        const membersControls = document.getElementById('membersControls');
-        const postsControls = document.getElementById('postsControls');
-        
-        if (membersControls) membersControls.style.display = target === '#members' ? 'flex' : 'none';
-        if (postsControls) postsControls.style.display = target === '#posts' ? 'flex' : 'none';
     }
 
     // Load stats cho Dashboard tab nếu đang active
@@ -2636,11 +2621,19 @@ function setupMembersUI() {
   
   if (userRole !== 'viewer') return; // Nếu không phải viewer thì không cần làm gì
   
-  // ✅ Ẩn nút "Thêm" trên thanh menu mới
-  const addBtn = document.querySelector('#membersControls .btn-primary-sm');
-  if (addBtn) {
-    addBtn.style.display = 'none';
-  }
+  // Tìm tất cả nút trong members header
+  const membersHeader = document.querySelector('#members .members-header');
+  if (!membersHeader) return;
+  
+  // Tìm tất cả button trong header
+  const buttons = membersHeader.querySelectorAll('button');
+  
+  buttons.forEach(btn => {
+    const text = btn.textContent.trim();
+    if (text.includes('Thêm Thành viên')) {
+      btn.style.display = 'none';
+    }
+  });
 }
 // 11.2. Ẩn tab Settings với viewer
 function hideSettingsForViewer() {
@@ -2873,20 +2866,6 @@ function restrictViewerInAdvancedSearch() {
     // Không cần hạn chế gì thêm
     console.log('Viewer đang sử dụng tìm kiếm nâng cao');
   }
-}       else {
-            generationGroup.style.display = 'block';
-            generationSelect.innerHTML = '<option value="1">Thế hệ 1 (Thủy tổ)</option>';
-            generationSelect.value = '1';
-            generationSelect.disabled = false;
-        }
-    }
-
-    // Lắng nghe thay đổi
-    newParentSelect.addEventListener('change', updateGeneration);
-    newSpouseSelect.addEventListener('change', updateGeneration);
-
-    // Trigger ban đầu
-    updateGeneration();
 }
 /* ==========================================================
    14. SETUP VIEWER RESTRICTIONS (BỔ SUNG)
