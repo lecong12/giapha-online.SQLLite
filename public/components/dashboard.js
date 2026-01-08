@@ -2515,7 +2515,10 @@ function populatePersonDropdown() {
         option.value = person.id;
         
         // Đảm bảo màu sắc option rõ ràng
-        option.style.color = '#1f2937';
+            option.style.color = '#1f2937'; // Còn sống: Màu đen
+        } else {
+            option.style.color = '#6b7280'; // Đã mất: Màu xám
+        }
         option.style.backgroundColor = '#ffffff';
         
         const name = person.full_name || 'Không tên';
@@ -2523,7 +2526,7 @@ function populatePersonDropdown() {
         const year = person.birth_date ? new Date(person.birth_date).getFullYear() : '?';
         const status = person.is_alive ? '✅' : '⚰️';
         
-        option.textContent = `${status} ${name} (Đời ${gen}, s.${year})`;
+        option.textContent = `${status} ${name} (Đời thứ ${gen}, s.${year})`;
         
         if (person.id === treeRenderer.selectedPersonId) {
             option.selected = true;
