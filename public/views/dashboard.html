@@ -28,6 +28,45 @@
         opacity: 0;
     }
 }
+
+/* ✅ Searchable Select Styles (Dropdown tìm kiếm) */
+.search-select-container {
+    position: relative;
+}
+.search-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.search-item {
+    padding: 8px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+}
+.search-item:hover {
+    background-color: #f3f4f6;
+}
+.search-item small {
+    color: #666;
+    display: block;
+    font-size: 0.85em;
+}
 </style>
 </head>
 <body class="dashboard-page">
@@ -488,15 +527,19 @@ Nguyễn Văn C,Nam,1930-01-25,,2,Con trưởng,,Kỹ sư,Hà Nội,Nguyễn Vă
             Cha/Mẹ 
             <span style="color: #f97316; font-size: 11px;">(Bắt buộc nếu đời > 1)</span>
         </label>
-        <select id="memberParent">
-            <option value="">-- Không có (Chỉ dành cho thủy tổ) --</option>
-        </select>
+        <div class="search-select-container">
+            <input type="text" id="memberParentSearch" class="search-input" placeholder="Gõ tên để tìm kiếm..." autocomplete="off">
+            <input type="hidden" id="memberParent">
+            <div id="memberParentResults" class="search-results"></div>
+        </div>
     </div>
     <div class="form-group">
         <label>Vợ/Chồng</label>
-        <select id="memberSpouse">
-            <option value="">-- Không có --</option>
-        </select>
+        <div class="search-select-container">
+            <input type="text" id="memberSpouseSearch" class="search-input" placeholder="Gõ tên để tìm kiếm..." autocomplete="off">
+            <input type="hidden" id="memberSpouse">
+            <div id="memberSpouseResults" class="search-results"></div>
+        </div>
         <small style="color: #6b7280; font-size: 11px; display: block; margin-top: 4px;">
             💡 Chọn từ danh sách đã có. Nếu chưa có, hãy <strong>Thêm thành viên mới</strong> cho vợ/chồng đó.
         </small>

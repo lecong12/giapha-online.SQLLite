@@ -736,11 +736,15 @@ async function openAddMemberModal() {
   form.reset();
   title.textContent = 'Thêm Thành Viên';
   
-  // ✅ THÊM LOGIC: Ẩn/hiện field Generation
-  setupGenerationField();
+  // ✅ Setup dropdown tìm kiếm
+  setupSearchableDropdown('memberParentSearch', 'memberParent', 'memberParentResults', allMembers, updateGenerationLogic);
+  setupSearchableDropdown('memberSpouseSearch', 'memberSpouse', 'memberSpouseResults', allMembers, updateGenerationLogic);
   
-  await loadParentOptions();
-  await loadSpouseOptions();
+  // Reset hidden inputs
+  document.getElementById('memberParent').value = '';
+  document.getElementById('memberSpouse').value = '';
+  
+  updateGenerationLogic();
   
   modal.classList.add('active');
 }
@@ -790,9 +794,21 @@ document.getElementById('isDeceasedUnknown').checked = isDeceasedUnknown;
     document.getElementById('memberAddress').value = member.address || '';
     document.getElementById('memberNote').value = member.notes || '';
   
-    // Load options
-    await loadParentOptions(member.parents && member.parents.length > 0 ? member.parents[0].id : null);
-    await loadSpouseOptions(member.spouse ? member.spouse.spouse_id : null);
+    // ✅ Điền thông tin vào ô tìm kiếm (Edit Mode)
+    const parent = member.parents && member.parents.length > 0 ? member.parents[0] : null;
+    const spouse = member.spouse;
+
+    document.getElementById('memberParentSearch').value = parent ? parent.full_name : '';
+    document.getElementById('memberParent').value = parent ? parent.id : '';
+    
+    document.getElementById('memberSpouseSearch').value = spouse ? spouse.spouse_name : '';
+    document.getElementById('memberSpouse').value = spouse ? spouse.spouse_id : '';
+
+    // Filter chính mình ra khỏi danh sách gợi ý
+    const validMembers = allMembers.filter(m => m.id !== memberId);
+    
+    setupSearchableDropdown('memberParentSearch', 'memberParent', 'memberParentResults', validMembers, updateGenerationLogic);
+    setupSearchableDropdown('memberSpouseSearch', 'memberSpouse', 'memberSpouseResults', validMembers, updateGenerationLogic);
   
     // ✅ THÊM DÒNG NÀY - Setup generation field cho chế độ edit
     // Khi edit, generation nên bị disable (không cho sửa)
@@ -816,48 +832,6 @@ function closeAddMemberModal() {
     modal.classList.remove('active');
   }
   editingMemberId = null;
-}
-
-// 5.7. Load danh sách cha/mẹ
-async function loadParentOptions(selectedId = null) {
-  const select = document.getElementById('memberParent');
-  if (!select) return;
-
-  select.innerHTML = '<option value="">-- Không có --</option>';
-  
-  allMembers.forEach(m => {
-    // ✅ FIX: Không hiển thị chính mình trong danh sách cha mẹ
-    if (editingMemberId && m.id === editingMemberId) return;
-
-    const option = document.createElement('option');
-    option.value = m.id;
-    option.textContent = `${m.full_name} (Đời ${m.generation || 'N/A'})`;
-    if (selectedId && m.id === selectedId) {
-      option.selected = true;
-    }
-    select.appendChild(option);
-  });
-}
-
-// 5.8. Load danh sách vợ/chồng
-async function loadSpouseOptions(selectedId = null) {
-  const select = document.getElementById('memberSpouse');
-  if (!select) return;
-
-  select.innerHTML = '<option value="">-- Không có --</option>';
-  
-  allMembers.forEach(m => {
-    // ✅ FIX: Không hiển thị chính mình trong danh sách vợ chồng
-    if (editingMemberId && m.id === editingMemberId) return;
-
-    const option = document.createElement('option');
-    option.value = m.id;
-    option.textContent = `${m.full_name} (${m.gender})`;
-    if (selectedId && m.id === selectedId) {
-      option.selected = true;
-    }
-    select.appendChild(option);
-  });
 }
 
 // 5.9. Submit form (thêm/sửa)
@@ -2764,69 +2738,100 @@ function renderUpcomingDeathAnniversaries(list) {
    13. LOGIC TỰ ĐỘNG GENERATION
 ========================================================== */
 
-// Setup generation field dựa vào parent_id
-function setupGenerationField() {
-    const parentSelect = document.getElementById('memberParent');
-    const spouseSelect = document.getElementById('memberSpouse');
+// ✅ Hàm xử lý logic tìm kiếm dropdown
+function setupSearchableDropdown(searchInputId, hiddenInputId, resultsId, data, onSelect) {
+    const searchInput = document.getElementById(searchInputId);
+    const hiddenInput = document.getElementById(hiddenInputId);
+    const resultsDiv = document.getElementById(resultsId);
+
+    if (!searchInput || !hiddenInput || !resultsDiv) return;
+
+    const closeResults = () => {
+        resultsDiv.style.display = 'none';
+    };
+
+    const renderResults = (items) => {
+        resultsDiv.innerHTML = '';
+        if (items.length === 0) {
+            closeResults();
+            return;
+        }
+
+        items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'search-item';
+            const genInfo = item.generation ? `(Đời ${item.generation})` : '';
+            div.innerHTML = `<strong>${item.full_name}</strong> <small>${genInfo} - ${item.gender}</small>`;
+            
+            div.onclick = (e) => {
+                e.stopPropagation();
+                searchInput.value = item.full_name;
+                hiddenInput.value = item.id;
+                closeResults();
+                if (onSelect) onSelect();
+            };
+            resultsDiv.appendChild(div);
+        });
+        resultsDiv.style.display = 'block';
+    };
+
+    searchInput.oninput = () => {
+        const keyword = searchInput.value.toLowerCase().trim();
+        
+        // Clear ID nếu người dùng thay đổi text
+        hiddenInput.value = '';
+        if (onSelect) onSelect();
+
+        if (!keyword) {
+            closeResults();
+            return;
+        }
+
+        const filtered = data.filter(m => 
+            m.full_name.toLowerCase().includes(keyword)
+        );
+        renderResults(filtered);
+    };
+}
+
+// ✅ Logic cập nhật thế hệ (thay thế setupGenerationField cũ)
+function updateGenerationLogic() {
+    const parentId = document.getElementById('memberParent').value;
+    const spouseId = document.getElementById('memberSpouse').value;
     const generationSelect = document.getElementById('memberGeneration');
     const generationGroup = generationSelect.closest('.form-group');
 
-    if (!parentSelect || !generationSelect || !spouseSelect) return;
-
-    // Clone để xóa event listener cũ
-    const newParentSelect = parentSelect.cloneNode(true);
-    const newSpouseSelect = spouseSelect.cloneNode(true);
-    
-    parentSelect.parentNode.replaceChild(newParentSelect, parentSelect);
-    spouseSelect.parentNode.replaceChild(newSpouseSelect, spouseSelect);
-
-    // Ẩn field generation ban đầu
-    generationGroup.style.display = 'none';
-
-    // Function helper tính generation
-    function updateGeneration() {
-        const parentId = newParentSelect.value;
-        const spouseId = newSpouseSelect.value;
-
-        // TRƯỜNG HỢP 1: Có cha/mẹ → Con ruột
-        if (parentId) {
-            const parent = allMembers.find(m => m.id == parentId);
+    // TRƯỜNG HỢP 1: Có cha/mẹ → Con ruột
+    if (parentId) {
+        const parent = allMembers.find(m => m.id == parentId);
+        
+        if (parent && parent.generation) {
+            const childGeneration = parent.generation + 1;
             
-            if (parent && parent.generation) {
-                const childGeneration = parent.generation + 1;
-                
-                generationGroup.style.display = 'block';
-                generationSelect.innerHTML = `<option value="${childGeneration}">Thế hệ ${childGeneration} (Con ruột)</option>`;
-                generationSelect.value = childGeneration;
-                generationSelect.disabled = true;
-            }
-        }
-        // TRƯỜNG HỢP 2: Không có cha/mẹ, nhưng có vợ/chồng → Con dâu/rễ
-        else if (spouseId) {
-            const spouse = allMembers.find(m => m.id == spouseId);
-            
-            if (spouse && spouse.generation) {
-                generationGroup.style.display = 'block';
-                generationSelect.innerHTML = `<option value="${spouse.generation}">Thế hệ ${spouse.generation} (Con dâu/rễ)</option>`;
-                generationSelect.value = spouse.generation;
-                generationSelect.disabled = true;
-            }
-        }
-        // TRƯỜNG HỢP 3: Không có cả cha/mẹ và vợ/chồng → Thủy tổ
-        else {
             generationGroup.style.display = 'block';
-            generationSelect.innerHTML = '<option value="1">Thế hệ 1 (Thủy tổ)</option>';
-            generationSelect.value = '1';
-            generationSelect.disabled = false;
+            generationSelect.innerHTML = `<option value="${childGeneration}">Thế hệ ${childGeneration} (Con ruột)</option>`;
+            generationSelect.value = childGeneration;
+            generationSelect.disabled = true;
         }
     }
-
-    // Lắng nghe thay đổi
-    newParentSelect.addEventListener('change', updateGeneration);
-    newSpouseSelect.addEventListener('change', updateGeneration);
-
-    // Trigger ban đầu
-    updateGeneration();
+    // TRƯỜNG HỢP 2: Không có cha/mẹ, nhưng có vợ/chồng → Con dâu/rễ
+    else if (spouseId) {
+        const spouse = allMembers.find(m => m.id == spouseId);
+        
+        if (spouse && spouse.generation) {
+            generationGroup.style.display = 'block';
+            generationSelect.innerHTML = `<option value="${spouse.generation}">Thế hệ ${spouse.generation} (Con dâu/rễ)</option>`;
+            generationSelect.value = spouse.generation;
+            generationSelect.disabled = true;
+        }
+    }
+    // TRƯỜNG HỢP 3: Không có cả cha/mẹ và vợ/chồng → Thủy tổ
+    else {
+        generationGroup.style.display = 'block';
+        generationSelect.innerHTML = '<option value="1">Thế hệ 1 (Thủy tổ)</option>';
+        generationSelect.value = '1';
+        generationSelect.disabled = false;
+    }
 }
 /* ==========================================================
    14. SETUP VIEWER RESTRICTIONS (BỔ SUNG)
@@ -2882,3 +2887,14 @@ function restrictViewerInAdvancedSearch() {
     console.log('Viewer đang sử dụng tìm kiếm nâng cao');
   }
 }
+
+// Global click listener để đóng dropdown khi click ra ngoài
+document.addEventListener('click', (e) => {
+    const dropdowns = document.querySelectorAll('.search-results');
+    dropdowns.forEach(d => {
+        const container = d.closest('.search-select-container');
+        if (d.style.display === 'block' && container && !container.contains(e.target)) {
+            d.style.display = 'none';
+        }
+    });
+});
