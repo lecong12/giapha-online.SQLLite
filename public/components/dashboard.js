@@ -210,6 +210,12 @@ async function loadDashboardStats() {
     const upcoming = stats.upcomingBirthdays || [];
     renderUpcomingBirthdays(upcoming);
 
+    // 5. Ngày giỗ sắp tới
+    const deathAnniversaries = stats.upcomingDeathAnniversaries || [];
+    if (typeof renderUpcomingDeathAnniversaries === 'function') {
+        renderUpcomingDeathAnniversaries(deathAnniversaries);
+    }
+
     const activities = stats.activities || [];
     renderRecentActivities(activities);
   } catch (err) {
@@ -618,12 +624,8 @@ if (member.is_alive) {
     if (userRole === 'owner') {
       actionsHtml = `
         <div class="member-actions">
-          
-          <button class="btn-edit" onclick="openEditMemberModal(${member.id})">
-          <button class="btn-edit" onclick="openEditMemberModal(${member.id})" style="padding: 4px 8px; font-size: 12px;">
             <i class="fas fa-edit"></i> Sửa
           </button>
-          <button class="btn-delete" onclick="deleteMember(${member.id})">
           <button class="btn-delete" onclick="deleteMember(${member.id})" style="padding: 4px 8px; font-size: 12px;">
             <i class="fas fa-trash"></i> Xóa
           </button>
@@ -1900,44 +1902,12 @@ function renderPosts(posts) {
       : '<span style="background: #fed7aa; color: #c2410c; padding: 2px 8px; border-radius: 4px; font-size: 11px;">👑 Admin</span>';
 
     // Kiểm tra quyền sửa/xóa
-    // Kiểm tra quyền sửa và xóa riêng biệt
-// Kiểm tra quyền sửa và xóa riêng biệt
-const canEdit = (post.author_id === userId);
-const canDelete = (userRole === 'owner') || (post.author_id === userId);
-
-let actionsHtml = '';
-
-if (canEdit || canDelete) {
-  actionsHtml = `<div class="post-actions" style="display: flex; gap: 8px;">`; // ✅ THÊM BACKTICK
-  
-  if (canEdit) {
-    actionsHtml += `
-      <button class="btn-edit" onclick="event.stopPropagation(); openEditPostModal(${post.id})" 
-              style="padding: 6px 12px; background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: white; border: none; border-radius: 6px; cursor: pointer;">
-              style="padding: 4px 8px; font-size: 12px; background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: white; border: none; border-radius: 6px; cursor: pointer;">
-        <i class="fas fa-edit"></i> Sửa
-      </button>
-    `;
-  }
-  
-  if (canDelete) {
-    actionsHtml += `
-      <button class="btn-delete" onclick="event.stopPropagation(); deletePost(${post.id})" 
-              style="padding: 6px 12px; background: linear-gradient(135deg, #ef4444, #f87171); color: white; border: none; border-radius: 6px; cursor: pointer;">
-              style="padding: 4px 8px; font-size: 12px; background: linear-gradient(135deg, #ef4444, #f87171); color: white; border: none; border-radius: 6px; cursor: pointer;">
-        <i class="fas fa-trash"></i> Xóa
-      </button>
-    `;
-  }
-  
-  actionsHtml += `</div>`; // ✅ THÊM BACKTICK
-}
-    card.innerHTML = `
-      ${post.is_pinned ? '<div style="position: absolute; top: 10px; right: 10px; background: #f97316; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">📌 Ghim</div>' : ''}
+    const canEdit = (postcle
+    if (canEdit || canDelete) {
+      actionsHtml = `<div class="post-actions" style="display: flex; gap: 8px;">`;
       
-      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
-        <div style="flex: 1;">
-          <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 8px 0;">${post.title}</h3>
+ i)     actionsHtml += `
+         <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 8px 0;">${post.title}</h3>
           <div style="display: flex; gap: 12px; font-size: 12px; color: #666; flex-wrap: wrap;">
             <span>${icon} ${categoryName}</span>
             <span>•</span>
@@ -2146,7 +2116,6 @@ if (canEdit || canDelete) {
   if (canEdit) {
     buttonsHtml += `
       <button class="btn-edit" onclick="closeViewPostModal(); openEditPostModal(${post.id});" 
-              style="padding: 8px 16px; background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: white; border: none; border-radius: 8px; cursor: pointer;">
               style="padding: 6px 12px; font-size: 13px; background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: white; border: none; border-radius: 8px; cursor: pointer;">
         <i class="fas fa-edit"></i> Sửa
       </button>
@@ -2156,7 +2125,6 @@ if (canEdit || canDelete) {
   if (canDelete) {
     buttonsHtml += `
       <button class="btn-delete" onclick="closeViewPostModal(); deletePost(${post.id});" 
-              style="padding: 8px 16px; background: linear-gradient(135deg, #ef4444, #f87171); color: white; border: none; border-radius: 8px; cursor: pointer;">
               style="padding: 6px 12px; font-size: 13px; background: linear-gradient(135deg, #ef4444, #f87171); color: white; border: none; border-radius: 8px; cursor: pointer;">
         <i class="fas fa-trash"></i> Xóa
       </button>
@@ -2738,71 +2706,6 @@ function renderUpcomingDeathAnniversaries(list) {
   });
 }
 
-// Trong loadDashboardStats(), thêm:
-async function loadDashboardStats() {
-  try {
-    const data = await apiGet('/api/dashboard/stats');
-    
-    if (!data || !data.success) {
-      console.error('Lỗi load stats:', data);
-      return;
-    }
-
-    // ✅ DÒNG NÀY BẮT BUỘC PHẢI CÓ
-    const stats = data.stats || {};
-    
-    const total = stats.total || 0;
-    const males = stats.males || 0;
-    const females = stats.females || 0;
-    const maxGen = stats.maxGeneration || 0;
-
-    // Gán số liệu vào các ô
-    const totalEl = document.getElementById('totalMembers');
-    const maleCountEl = document.getElementById('maleCount');
-    const femaleCountEl = document.getElementById('femaleCount');
-    const malePercentEl = document.getElementById('malePercent');
-    const femalePercentEl = document.getElementById('femalePercent');
-    const generationCountEl = document.getElementById('generationCount');
-
-    if (totalEl) totalEl.textContent = total;
-    if (maleCountEl) maleCountEl.textContent = males;
-    if (femaleCountEl) femaleCountEl.textContent = females;
-    if (generationCountEl) generationCountEl.textContent = maxGen;
-
-    // Tính % Nam / Nữ
-    let malePercentText = '0%';
-    let femalePercentText = '0%';
-
-    if (total > 0) {
-      const malePercent = Math.round((males / total) * 100);
-      const femalePercent = Math.round((females / total) * 100);
-      malePercentText = malePercent + '%';
-      femalePercentText = femalePercent + '%';
-    }
-
-    if (malePercentEl) malePercentEl.textContent = malePercentText;
-    if (femalePercentEl) femalePercentEl.textContent = femalePercentText;
-
-    // Phân bố thế hệ
-    const genDist = stats.generations || [];
-    renderGenerationPie(genDist, total);
-
-    // Sinh nhật sắp tới
-    const upcoming = stats.upcomingBirthdays || [];
-    renderUpcomingBirthdays(upcoming);
-
-    // Ngày giỗ sắp tới
-    const deathAnniversaries = stats.upcomingDeathAnniversaries || [];
-    renderUpcomingDeathAnniversaries(deathAnniversaries);
-
-    // Hoạt động gần đây
-    const activities = stats.activities || [];
-    renderRecentActivities(activities);
-
-  } catch (err) {
-    console.error('Không thể kết nối server.', err);
-  }
-}
 /* ==========================================================
    13. LOGIC TỰ ĐỘNG GENERATION
 ========================================================== */
