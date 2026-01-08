@@ -50,23 +50,117 @@
     z-index: 999;
     background-color: #ffffff;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    padding: 10px 0;
+    padding: 0 20px;
+    height: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
 }
 
-/* ✅ Cố định thanh công cụ (Tìm kiếm) khi cuộn */
-.members-header {
-    position: sticky;
-    top: 125px; /* Header (65) + Tabs (~60) */
-    z-index: 99;
-    background-color: #ffffff;
-    padding: 15px 0;
-    border-bottom: 1px solid #e5e7eb;
-    margin-bottom: 20px;
+.tabs-left {
+    display: flex;
+    height: 100%;
+    gap: 5px;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 0 15px;
+    height: 100%;
+    cursor: pointer;
+    font-weight: 500;
+    color: #6b7280;
+    border-bottom: 3px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    color: #0ea5e9;
+    background-color: #f0f9ff;
+}
+
+.tab-btn.active {
+    color: #0ea5e9;
+    border-bottom-color: #0ea5e9;
+}
+
+.tabs-right {
+    display: flex;
+    align-items: center;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Style cho ô tìm kiếm nhỏ gọn trên menu */
+.search-compact {
+    position: relative;
+}
+.search-compact input {
+    padding: 6px 10px 6px 32px;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    font-size: 13px;
+    width: 220px;
+    outline: none;
+    transition: border-color 0.2s;
+    background: #f9fafb;
+}
+.search-compact input:focus {
+    border-color: #0ea5e9;
+    background: #fff;
+    width: 260px; /* Hiệu ứng mở rộng khi focus */
+}
+.search-compact i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 12px;
+}
+
+/* Nút nhỏ gọn trên menu */
+.btn-menu {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    transition: transform 0.1s;
+}
+.btn-menu:active {
+    transform: scale(0.95);
+}
+.btn-primary-sm {
+    background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+    color: white;
+}
+.btn-outline-sm {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+}
+.btn-outline-sm:hover {
+    background: #f3f4f6;
 }
 
 /* ✅ Đẩy nội dung xuống để không bị che bởi Header và Tabs cố định */
 .main-content {
-    margin-top: 140px;
+    margin-top: 135px; /* 65 (header) + 50 (tabs) + 20 (gap) */
 }
 </style>
 </head>
@@ -94,21 +188,47 @@
 
     <!-- TABS -->
     <div class="tabs-container">
-        <button class="tab-btn active" data-tab="dashboard" data-target="#dashboard">
-            <i class="fas fa-chart-line"></i> Dashboard
-        </button>
-        <button class="tab-btn" data-tab="tree" data-target="#tree">
-            <i class="fas fa-sitemap"></i> Cây Gia Phả
-        </button>
-        <button class="tab-btn" data-tab="members" data-target="#members">
-            <i class="fas fa-users"></i> Thành viên
-        </button>
-        <button class="tab-btn" data-tab="posts" data-target="#posts">
-            <i class="fas fa-newspaper"></i> Bài Viết
-        </button>
-        <button class="tab-btn" data-tab="settings" data-target="#settings">
-            <i class="fas fa-cog"></i> Cài Đặt
-        </button>
+        <div class="tabs-left">
+            <button class="tab-btn active" data-tab="dashboard" data-target="#dashboard">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </button>
+            <button class="tab-btn" data-tab="tree" data-target="#tree">
+                <i class="fas fa-sitemap"></i> Cây Gia Phả
+            </button>
+            <button class="tab-btn" data-tab="members" data-target="#members">
+                <i class="fas fa-users"></i> Thành viên
+            </button>
+            <button class="tab-btn" data-tab="posts" data-target="#posts">
+                <i class="fas fa-newspaper"></i> Bài Viết
+            </button>
+            <button class="tab-btn" data-tab="settings" data-target="#settings">
+                <i class="fas fa-cog"></i> Cài Đặt
+            </button>
+        </div>
+
+        <!-- KHU VỰC CÔNG CỤ (Sẽ thay đổi tùy theo Tab đang chọn) -->
+        <div class="tabs-right">
+            <!-- Công cụ cho Tab Thành Viên -->
+            <div id="membersControls" class="control-group" style="display: none;">
+                <div class="search-compact">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Tìm thành viên...">
+                </div>
+                <button class="btn-menu btn-outline-sm" onclick="openAdvancedSearch()" title="Tìm nâng cao">
+                    <i class="fas fa-filter"></i>
+                </button>
+                <button class="btn-menu btn-primary-sm" onclick="openAddMemberModal()">
+                    <i class="fas fa-plus"></i> Thêm
+                </button>
+            </div>
+
+            <!-- Công cụ cho Tab Bài Viết -->
+            <div id="postsControls" class="control-group" style="display: none;">
+                <button class="btn-menu btn-primary-sm" onclick="openCreatePostModal()">
+                    <i class="fas fa-pen"></i> Viết bài
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- MAIN CONTENT -->
@@ -236,18 +356,7 @@
         <!-- MEMBERS TAB -->
         <div id="members" class="tab-content">
             <div class="tree-section">
-                <div class="members-header">
-                    <div class="search-bar">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="searchInput" placeholder="Tìm kiếm thành viên...">
-                    </div>
-                    <button class="btn-add" onclick="openAdvancedSearch()" style="background: linear-gradient(135deg, #06b6d4, #0ea5e9);">
-                        <i class="fas fa-filter"></i> Tìm Nâng Cao
-                    </button>
-                    <button class="btn-add" onclick="openAddMemberModal()">
-                        <i class="fas fa-plus"></i> Thêm Thành viên
-                    </button>
-                </div>
+                <!-- Nội dung danh sách thành viên -->
                 <div class="members-grid" id="membersGrid"></div>
             </div>
         </div>
@@ -256,16 +365,10 @@
              ========================================== -->
         <div id="posts" class="tab-content">
             <div class="tree-section">
-                <!-- Header -->
-                <div class="members-header">
-                    <h2 style="font-size: 20px; margin: 0; display: flex; align-items: center; gap: 10px;">
-                        <i class="fas fa-newspaper" style="color: var(--primary);"></i>
-                        Bài Viết & Thông Báo
-                    </h2>
-                    <button class="btn-add" onclick="openCreatePostModal()">
-                        <i class="fas fa-plus"></i> Tạo Bài viết
-                    </button>
-                </div>
+                <h2 style="font-size: 20px; margin: 0 0 20px 0; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-newspaper" style="color: var(--primary);"></i>
+                    Bài Viết & Thông Báo
+                </h2>
 
                 <!-- Danh sách bài viết -->
                 <div id="postsGrid" style="display: grid; gap: 20px; margin-top: 24px;"></div>

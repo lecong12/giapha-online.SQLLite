@@ -120,6 +120,13 @@ function handleTabSwitch(event) {
             }, 100);
         }
     }
+
+    // ✅ Cập nhật hiển thị công cụ trên thanh menu
+    const membersControls = document.getElementById('membersControls');
+    const postsControls = document.getElementById('postsControls');
+    
+    if (membersControls) membersControls.style.display = targetSelector === '#members' ? 'flex' : 'none';
+    if (postsControls) postsControls.style.display = targetSelector === '#posts' ? 'flex' : 'none';
 }
 
 /* ==========================================================
@@ -2255,6 +2262,14 @@ showViewerNotice();
         if (defaultTarget) {
             defaultTarget.style.display = 'block';
         }
+        
+        // ✅ Hiển thị controls cho tab mặc định
+        const target = defaultActiveButton.dataset.target;
+        const membersControls = document.getElementById('membersControls');
+        const postsControls = document.getElementById('postsControls');
+        
+        if (membersControls) membersControls.style.display = target === '#members' ? 'flex' : 'none';
+        if (postsControls) postsControls.style.display = target === '#posts' ? 'flex' : 'none';
     }
 
     // Load stats cho Dashboard tab nếu đang active
@@ -2621,23 +2636,11 @@ function setupMembersUI() {
   
   if (userRole !== 'viewer') return; // Nếu không phải viewer thì không cần làm gì
   
-  // Tìm tất cả nút trong members header
-  const membersHeader = document.querySelector('#members .members-header');
-  if (!membersHeader) return;
-  
-  // Tìm tất cả button trong header
-  const buttons = membersHeader.querySelectorAll('button');
-  
-  buttons.forEach(btn => {
-    const text = btn.textContent.trim();
-    
-    // Chỉ ẩn nút "Thêm Thành Viên"
-    if (text.includes('Thêm Thành Viên')) {
-      btn.style.display = 'none';
-    }
-    
-    // GIỮ NGUYÊN nút "Tìm Nâng Cao"
-  });
+  // ✅ Ẩn nút "Thêm" trên thanh menu mới
+  const addBtn = document.querySelector('#membersControls .btn-primary-sm');
+  if (addBtn) {
+    addBtn.style.display = 'none';
+  }
 }
 // 11.2. Ẩn tab Settings với viewer
 function hideSettingsForViewer() {
@@ -2803,6 +2806,74 @@ function setupGenerationField() {
         }
         // TRƯỜNG HỢP 3: Không có cả cha/mẹ và vợ/chồng → Thủy tổ
         else {
+            generationGroup.style.display = 'block';
+            generationSelect.innerHTML = '<option value="1">Thế hệ 1 (Thủy tổ)</option>';
+            generationSelect.value = '1';
+            generationSelect.disabled = false;
+        }
+    }
+
+    // Lắng nghe thay đổi
+    newParentSelect.addEventListener('change', updateGeneration);
+    newSpouseSelect.addEventListener('change', updateGeneration);
+
+    // Trigger ban đầu
+    updateGeneration();
+}
+/* ==========================================================
+   14. SETUP VIEWER RESTRICTIONS (BỔ SUNG)
+========================================================== */
+/* ==========================================================
+   15. LOAD GENERATION OPTIONS CHO ADVANCED SEARCH
+========================================================== */
+
+/**
+ * Load danh sách thế hệ từ dữ liệu thực tế
+ * Tự động cập nhật dropdown trong Advanced Search
+ */
+async function loadGenerationOptions() {
+  const select = document.getElementById('searchGeneration');
+  if (!select) return;
+
+  try {
+    // Lấy danh sách thế hệ từ stats API
+    const data = await apiGet('/api/dashboard/stats');
+    
+    if (!data || !data.success) {
+      console.error('Không load được stats để lấy thế hệ');
+      return;
+    }
+
+    const stats = data.stats || {};
+    const maxGeneration = stats.maxGeneration || 5; // Default 5 nếu không có data
+
+    // Xóa tất cả option cũ (trừ "-- Tất cả --")
+    const options = select.querySelectorAll('option:not([value=""])');
+    options.forEach(opt => opt.remove());
+
+    // Tạo option từ 1 đến maxGeneration
+    for (let i = 1; i <= maxGeneration; i++) {
+      const option = document.createElement('option');
+      option.value = i;
+      option.textContent = `Thế hệ ${i}`;
+      select.appendChild(option);
+    }
+
+    console.log(`✅ Đã load ${maxGeneration} thế hệ vào dropdown`);
+  } catch (err) {
+    console.error('Lỗi loadGenerationOptions:', err);
+  }
+}
+// Gọi function này khi mở Advanced Search Modal
+function restrictViewerInAdvancedSearch() {
+  const userRole = localStorage.getItem('userRole');
+  
+  if (userRole === 'viewer') {
+    // Viewer có thể tìm kiếm bình thường
+    // Không cần hạn chế gì thêm
+    console.log('Viewer đang sử dụng tìm kiếm nâng cao');
+  }
+}       else {
             generationGroup.style.display = 'block';
             generationSelect.innerHTML = '<option value="1">Thế hệ 1 (Thủy tổ)</option>';
             generationSelect.value = '1';
