@@ -29,25 +29,44 @@
     }
 }
 
-/* ✅ Cố định thanh menu (tabs) */
-.tabs-container {
-    position: sticky;
+/* ✅ Cố định Header */
+.header {
+    position: fixed;
     top: 0;
-    z-index: 100;
+    left: 0;
+    width: 100%;
+    height: 65px;
+    z-index: 1000;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* ✅ Cố định thanh menu (tabs) ngay dưới Header */
+.tabs-container {
+    position: fixed;
+    top: 65px;
+    left: 0;
+    width: 100%;
+    z-index: 999;
     background-color: #ffffff;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     padding: 10px 0;
 }
 
-/* ✅ Cố định thanh công cụ (Tìm kiếm, Thêm thành viên) khi cuộn */
+/* ✅ Cố định thanh công cụ (Tìm kiếm) khi cuộn */
 .members-header {
     position: sticky;
-    top: 65px; /* Đẩy xuống dưới thanh tabs (tránh bị che) */
+    top: 125px; /* Header (65) + Tabs (~60) */
     z-index: 99;
     background-color: #ffffff;
     padding: 15px 0;
     border-bottom: 1px solid #e5e7eb;
     margin-bottom: 20px;
+}
+
+/* ✅ Đẩy nội dung xuống để không bị che bởi Header và Tabs cố định */
+.main-content {
+    margin-top: 140px;
 }
 </style>
 </head>
