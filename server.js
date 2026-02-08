@@ -1,3 +1,4 @@
+require('dotenv').config(); // ✅ Load biến môi trường đầu tiên
 const express = require("express");
 const path = require("path");
 const cors = require("cors");
@@ -38,8 +39,11 @@ app.get('/api/db-check', (req, res) => {
     });
 });
 
+// ✅ ROUTE HEALTH CHECK (Quan trọng cho Render/Heroku)
+app.get('/', (req, res) => res.status(200).send('Giapha Online API is running...'));
+
 // HTML ROUTES
-app.get("/", (req, res) => {
+app.get("/app", (req, res) => { // Đổi root path của app client sang /app hoặc giữ nguyên nếu muốn serve static ở root
     const rootPath = path.join(PUBLIC_DIR, "views", "root.html");
     if (fs.existsSync(rootPath)) {
         res.sendFile(rootPath);
@@ -165,13 +169,20 @@ function initializeAndStartServer() {
                     if (!row) {
                         const passHash = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92';
                         const insertSql = `INSERT INTO users (email, password, password_hash, full_name, role, viewer_code) VALUES (?, ?, ?, ?, 'owner', 'ADMIN12345')`;
-                        dbAdapter.run(insertSql, ['admin@gmail.com', passHash, passHash, 'Admin'], (errInsert) => {
+                        
+                        // ✅ Dùng function() thường để lấy this.lastID
+                        dbAdapter.run(insertSql, ['admin@gmail.com', passHash, passHash, 'Admin'], function(errInsert) {
                             if (errInsert) {
                                 console.error("❌ Lỗi tạo tài khoản Admin:", errInsert.message);
                                 process.exit(1);
                             }
-                            console.log("\n👉 Đã tạo tài khoản Admin: admin@gmail.com / 123456\n");
-                            startListening(); // Bắt đầu lắng nghe khi đã tạo xong user
+                            
+                            // ✅ Cập nhật owner_id cho Admin
+                            const newAdminId = this.lastID;
+                            dbAdapter.run("UPDATE users SET owner_id = ? WHERE id = ?", [newAdminId, newAdminId], () => {
+                                console.log(`\n👉 Đã tạo tài khoản Admin: admin@gmail.com / 123456 (ID: ${newAdminId})\n`);
+                                startListening();
+                            });
                         });
                     } else {
                         // Nếu tài khoản đã tồn tại nhưng tên vẫn là "Admin Mặc Định", hãy sửa lại

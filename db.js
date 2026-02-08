@@ -1,3 +1,4 @@
+require('dotenv').config(); // ✅ Load biến môi trường
 const { Pool } = require('pg');
 
 // Lấy chuỗi kết nối từ biến môi trường
@@ -15,12 +16,13 @@ class DatabaseAdapter {
         this.pool = new Pool({
             connectionString: connectionString,
             // Tự động bật SSL nếu không phải localhost (Render yêu cầu SSL)
-            ssl: connectionString && connectionString.includes('localhost') 
+            // ✅ Thêm check 127.0.0.1 cho Windows/Local
+            ssl: (connectionString && (connectionString.includes('localhost') || connectionString.includes('127.0.0.1')))
                 ? false 
                 : { rejectUnauthorized: false },
             max: 20, // Số lượng kết nối tối đa
             idleTimeoutMillis: 30000,
-            connectionTimeoutMillis: 5000,
+            connectionTimeoutMillis: 10000, // ✅ Tăng lên 10s để tránh timeout khi DB ngủ đông
         });
 
         // Xử lý lỗi pool toàn cục
