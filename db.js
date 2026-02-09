@@ -10,6 +10,13 @@ class DatabaseAdapter {
         if (!connectionString) {
             console.warn("⚠️ CẢNH BÁO: Không tìm thấy biến môi trường DATABASE_URL.");
             console.warn("👉 Nếu chạy trên Render: Hãy vào tab Environment và thêm DATABASE_URL.");
+            console.error("❌ LỖI NGHIÊM TRỌNG: Biến môi trường DATABASE_URL chưa được thiết lập!");
+            console.error("👉 Nếu chạy Local: Hãy tạo file .env và thêm: DATABASE_URL=postgres://user:pass@localhost:5432/db");
+            console.error("👉 Nếu chạy Render: Hãy vào Dashboard -> Environment Variables.");
+        } else {
+            // Log URL đã che mật khẩu để debug
+            const maskedUrl = connectionString.replace(/:([^:@]+)@/, ':****@');
+            console.log(`🔌 Database Config: ${maskedUrl}`);
         }
 
         // Cấu hình Pool kết nối PostgreSQL

@@ -17,13 +17,24 @@ const PUBLIC_DIR = path.join(__dirname, "public");
 app.use(express.static(PUBLIC_DIR));
 
 // ROUTES (Đảm bảo các file này có trong thư mục src/routes)
-app.use("/api/auth", require("./src/routes/authRoutes"));
-app.use("/api/dashboard", require("./src/routes/dashboardRoutes"));
-app.use("/api/members", require("./src/routes/membersRoutes"));
-app.use("/api/settings", require("./src/routes/settingsRoutes"));
-app.use("/api/viewers", require("./src/routes/viewerRoutes"));
-app.use("/api/posts", require("./src/routes/postsRoutes"));
-app.use("/api/activities", require("./src/routes/activityRoutes"));
+// ✅ Thêm Try-Catch để tránh sập app nếu thiếu file route
+function loadRoute(pathUrl, requirePath) {
+    try {
+        app.use(pathUrl, require(requirePath));
+        console.log(`✅ Route loaded: ${pathUrl}`);
+    } catch (error) {
+        console.error(`⚠️ CẢNH BÁO: Không tìm thấy file route cho '${pathUrl}' (${requirePath}).`);
+        console.error(`   👉 Lỗi: ${error.message}`);
+    }
+}
+
+loadRoute("/api/auth", "./src/routes/authRoutes");
+loadRoute("/api/dashboard", "./src/routes/dashboardRoutes");
+loadRoute("/api/members", "./src/routes/membersRoutes");
+loadRoute("/api/settings", "./src/routes/settingsRoutes");
+loadRoute("/api/viewers", "./src/routes/viewerRoutes");
+loadRoute("/api/posts", "./src/routes/postsRoutes");
+loadRoute("/api/activities", "./src/routes/activityRoutes");
 
 // ROUTE KIỂM TRA DATABASE (Thêm đoạn này để test)
 app.get('/api/db-check', (req, res) => {
@@ -56,6 +67,7 @@ app.get('/dashboard', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'views', 
 
 // DATABASE (Dùng path.resolve để Render tìm đúng file)
 function initializeAndStartServer() {
+    console.log("⏳ Đang kết nối Database...");
     dbAdapter.connect((err) => {
         if (err) {
             console.error("❌ Lỗi kết nối DB:", err.message);
@@ -66,6 +78,7 @@ function initializeAndStartServer() {
         app.set("db", dbAdapter); // Cung cấp dbAdapter thay vì sqlite3 gốc
 
         // Tuần tự hóa các lệnh DB để đảm bảo mọi thứ sẵn sàng trước khi server chạy
+        console.log("⏳ Đang kiểm tra và tạo bảng...");
         dbAdapter.serialize(() => {
             // Danh sách các bảng cần tạo
             const tableSchemas = [
@@ -159,6 +172,7 @@ function initializeAndStartServer() {
 
             function checkAdminAndStart() {
                 // 2. Tạo tài khoản Admin mặc định nếu chưa có
+                console.log("⏳ Đang kiểm tra tài khoản Admin...");
                 const checkSql = "SELECT id, full_name FROM users WHERE email = 'admin@gmail.com'";
                 dbAdapter.get(checkSql, (err, row) => {
                     if (err) {
