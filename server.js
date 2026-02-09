@@ -51,9 +51,10 @@ app.get('/api/db-check', (req, res) => {
 });
 
 // ✅ ROUTE HEALTH CHECK (Quan trọng cho Render/Heroku)
-app.get('/', (req, res) => res.status(200).send('Giapha Online API is running...'));
+app.get('/api/health', (req, res) => res.status(200).send('Giapha Online API is running...'));
 
 // HTML ROUTES
+app.get("/", (req, res) => res.redirect("/login"));
 app.get("/app", (req, res) => { // Đổi root path của app client sang /app hoặc giữ nguyên nếu muốn serve static ở root
     const rootPath = path.join(PUBLIC_DIR, "views", "root.html");
     if (fs.existsSync(rootPath)) {
