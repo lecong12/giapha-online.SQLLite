@@ -1,7 +1,7 @@
 // public/components/auth.js
 
 // Địa chỉ Backend trên Render của bạn
-const API_URL = ''; // ✅ Để trống để tự động dùng host hiện tại (tránh lỗi CORS/Sai server)
+const API_URL = ''; // ✅ LUÔN ĐỂ TRỐNG để tự động nhận diện domain (Localhost hoặc Render)
 
 async function handleLogin() {
     const role = document.getElementById('loginRole').value;

@@ -220,6 +220,7 @@ function initializeAndStartServer() {
 function startListening() {
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`🚀 Live tại Port: ${PORT}`);
+        console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
     });
 }
 
