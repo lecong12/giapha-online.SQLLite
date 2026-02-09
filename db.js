@@ -1,5 +1,7 @@
 require('dotenv').config(); // ✅ Load biến môi trường
 const { Pool } = require('pg');
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
 
 // Lấy chuỗi kết nối từ biến môi trường
 const connectionString = process.env.DATABASE_URL;
@@ -38,21 +40,36 @@ class DatabaseAdapter {
         });
 
         console.log("🔌 Đang khởi tạo Adapter PostgreSQL...");
+        this.db = null;
+        console.log("🔌 Đang khởi tạo Adapter SQLite...");
     }
 
     // Hàm kết nối (dùng để test khi khởi động server)
+    // Hàm kết nối
     connect(callback) {
         this.pool.query('SELECT NOW()', (err, res) => {
+        const dbPath = path.resolve(__dirname, 'giapha.db');
+        console.log(`📂 Database Path: ${dbPath}`);
+        
+        this.db = new sqlite3.Database(dbPath, (err) => {
             if (err) {
                 console.error("❌ Lỗi kết nối PostgreSQL:", err.message);
+                if (err.message.includes('ENOTFOUND')) {
+                    console.error("   🔍 Nguyên nhân: Hostname trong DATABASE_URL bị sai (không tìm thấy máy chủ).");
+                    console.error("   👉 Nếu chạy Local: Hãy đổi host thành 'localhost' hoặc '127.0.0.1'.");
+                    console.error("   👉 Kiểm tra file .env xem có chữ 'base' không?");
+                }
+                console.error("❌ Lỗi kết nối SQLite:", err.message);
             } else {
                 console.log("✅ Kết nối PostgreSQL thành công!");
+                console.log("✅ Kết nối SQLite thành công!");
             }
             if (callback) callback(err);
         });
     }
 
     // Hàm serialize (Giữ lại để tương thích interface, PG xử lý bất đồng bộ tự nhiên)
+    // Hàm serialize (SQLite cần cái này để chạy tuần tự)
     serialize(callback) {
         if (callback) callback();
     }
@@ -79,12 +96,17 @@ class DatabaseAdapter {
         // (Để lấy được ID vừa tạo giống như this.lastID của SQLite)
         if (/^INSERT/i.test(newSql) && !/RETURNING/i.test(newSql)) {
             newSql += ' RETURNING id';
+        if (this.db) {
+            this.db.serialize(callback);
+        } else if (callback) {
+            callback();
         }
         
         return newSql;
     }
 
     // Hàm thực thi lệnh (INSERT, UPDATE, DELETE)
+    // Hàm thực thi lệnh (INSERT, UPDATE, DELETE) - Dùng ? placeholder
     run(sql, params, callback) {
         // Xử lý overloading (nếu không truyền params)
         if (typeof params === 'function') {
@@ -102,6 +124,8 @@ class DatabaseAdapter {
                 return;
             }
 
+        // Dùng function() thường để giữ context 'this' (chứa lastID, changes)
+        this.db.run(sql, params, function(err) {
             if (callback) {
                 // Lấy ID của dòng vừa insert (PostgreSQL trả về qua RETURNING id)
                 let lastID = 0;
@@ -118,11 +142,13 @@ class DatabaseAdapter {
                 
                 // Gọi callback và bind context (để dùng được this.lastID)
                 callback.call(context, null);
+                callback.call(this, err);
             }
         });
     }
 
     // Hàm lấy 1 dòng dữ liệu (SELECT ... LIMIT 1)
+    // Hàm lấy 1 dòng dữ liệu
     get(sql, params, callback) {
         if (typeof params === 'function') {
             callback = params;
@@ -142,9 +168,11 @@ class DatabaseAdapter {
             const row = res && res.rows.length > 0 ? res.rows[0] : undefined;
             if (callback) callback(null, row);
         });
+        this.db.get(sql, params, callback);
     }
 
     // Hàm lấy nhiều dòng dữ liệu (SELECT *)
+    // Hàm lấy nhiều dòng dữ liệu
     all(sql, params, callback) {
         if (typeof params === 'function') {
             callback = params;
@@ -170,6 +198,7 @@ class DatabaseAdapter {
 
             if (callback) callback(null, rows);
         });
+        this.db.all(sql, params, callback);
     }
 }
 

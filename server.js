@@ -38,12 +38,12 @@ loadRoute("/api/activities", "./src/routes/activityRoutes");
 
 // ROUTE KIỂM TRA DATABASE (Thêm đoạn này để test)
 app.get('/api/db-check', (req, res) => {
-    dbAdapter.get("SELECT version()", (err, row) => {
+    dbAdapter.get("SELECT sqlite_version() as version", (err, row) => {
         if (err) {
             res.status(500).json({ status: 'Lỗi kết nối', error: err.message });
         } else {
             res.json({ 
-                status: '✅ Đang chạy PostgreSQL', 
+                status: '✅ Đang chạy SQLite', 
                 version: row ? row.version : 'Không xác định' 
             });
         }
@@ -83,7 +83,7 @@ function initializeAndStartServer() {
             // Danh sách các bảng cần tạo
             const tableSchemas = [
                 `CREATE TABLE IF NOT EXISTS users (
-                    id SERIAL PRIMARY KEY,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                     email TEXT UNIQUE,
                     password TEXT,
                     password_hash TEXT,
@@ -93,7 +93,7 @@ function initializeAndStartServer() {
                     viewer_code TEXT
                 )`,
                 `CREATE TABLE IF NOT EXISTS people (
-                    id SERIAL PRIMARY KEY,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                     owner_id INTEGER,
                     full_name TEXT,
                     gender TEXT,
@@ -112,13 +112,13 @@ function initializeAndStartServer() {
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )`,
                 `CREATE TABLE IF NOT EXISTS relationships (
-                    id SERIAL PRIMARY KEY,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                     parent_id INTEGER,
                     child_id INTEGER,
                     relation_type TEXT
                 )`,
                 `CREATE TABLE IF NOT EXISTS marriages (
-                    id SERIAL PRIMARY KEY,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                     husband_id INTEGER,
                     wife_id INTEGER,
                     marriage_date TEXT,
@@ -126,7 +126,7 @@ function initializeAndStartServer() {
                     notes TEXT
                 )`,
                 `CREATE TABLE IF NOT EXISTS posts (
-                    id SERIAL PRIMARY KEY,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                     owner_id INTEGER,
                     author_id INTEGER,
                     author_role TEXT,
@@ -138,7 +138,7 @@ function initializeAndStartServer() {
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )`,
                 `CREATE TABLE IF NOT EXISTS activity_logs (
-                    id SERIAL PRIMARY KEY,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                     owner_id INTEGER,
                     actor_id INTEGER,
                     actor_role TEXT,
