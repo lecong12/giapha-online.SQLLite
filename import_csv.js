@@ -11,8 +11,23 @@ const inputFile = 'data.csv';
 const importData = async () => {
     const rows = [];
     
+    // 0. KẾT NỐI DATABASE TRƯỚC
+    console.log("⏳ Đang kết nối Database...");
+    await new Promise((resolve, reject) => {
+        db.connect((err) => {
+            if (err) reject(err);
+            else resolve();
+        });
+    });
+
     // 1. Đọc file CSV
     console.log(`⏳ Đang đọc file '${inputFile}'...`);
+
+    if (!fs.existsSync(inputFile)) {
+        console.error(`❌ LỖI: Không tìm thấy file '${inputFile}' tại thư mục hiện tại.`);
+        console.error(`👉 Vui lòng tạo file '${inputFile}' hoặc kiểm tra lại tên file.`);
+        return;
+    }
     
     try {
         const stream = fs.createReadStream(inputFile).pipe(csv());
@@ -74,9 +89,6 @@ const importData = async () => {
         // Mặc định owner_id = 1 (Admin), is_alive = 1 (Còn sống), member_type = 'blood' (Huyết thống)
         const params = [
             defaultOwnerId, row.full_name, row.gender, row.birth_date, row.death_date, row.generation,
-            extraNotes, row.phone, row.job, row.address, 1, 'blood'
-        ];
-defaultOwnerId, row.full_name, row.gender, row.birth_date, row.death_date, row.generation,
             extraNotes, row.phone, row.job, row.address, 1, 'blood'
         ];
 

@@ -35,6 +35,10 @@ class DatabaseAdapter {
 
     // Hàm thực thi lệnh (INSERT, UPDATE, DELETE)
     run(sql, params, callback) {
+        if (!this.db) {
+            console.error("❌ LỖI: Database chưa kết nối! Hãy gọi db.connect() trước.");
+            return callback ? callback(new Error("Database not connected")) : null;
+        }
         if (typeof params === 'function') {
             callback = params;
             params = [];
@@ -50,6 +54,10 @@ class DatabaseAdapter {
 
     // Hàm lấy 1 dòng dữ liệu
     get(sql, params, callback) {
+        if (!this.db) {
+            console.error("❌ LỖI: Database chưa kết nối! Hãy gọi db.connect() trước.");
+            return callback ? callback(new Error("Database not connected")) : null;
+        }
         if (typeof params === 'function') {
             callback = params;
             params = [];
@@ -59,6 +67,10 @@ class DatabaseAdapter {
 
     // Hàm lấy nhiều dòng dữ liệu
     all(sql, params, callback) {
+        if (!this.db) {
+            console.error("❌ LỖI: Database chưa kết nối! Hãy gọi db.connect() trước.");
+            return callback ? callback(new Error("Database not connected")) : null;
+        }
         if (typeof params === 'function') {
             callback = params;
             params = [];
