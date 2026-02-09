@@ -10,6 +10,7 @@
 function ensureAuth() {
     const token = localStorage.getItem('authToken');
     if (!token) {
+        console.warn("⚠️ Không tìm thấy token, chuyển hướng về login.");
         window.location.href = "/login";
         return false;
     }
@@ -36,6 +37,7 @@ function ensureAuth() {
         return true;
     } catch (err) {
         console.error('Token validation failed:', err);
+        console.error('❌ Token không hợp lệ:', err.message);
         // Token không hợp lệ, xóa và redirect
         localStorage.removeItem('authToken');
         localStorage.removeItem('userName');
@@ -146,6 +148,7 @@ async function apiGet(url) {
   });
 
   if (res.status === 401) {
+    console.warn(`⚠️ API ${url} trả về 401 (Unauthorized). Token có thể đã hết hạn hoặc không khớp server.`);
     // Token sai/hết hạn -> xóa và quay lại login
     localStorage.removeItem('authToken');
     localStorage.removeItem('userName');

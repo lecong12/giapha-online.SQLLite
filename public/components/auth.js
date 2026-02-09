@@ -1,7 +1,7 @@
 // public/components/auth.js
 
 // Địa chỉ Backend trên Render của bạn
-const API_URL = 'https://giapha-holecong.onrender.com';
+const API_URL = ''; // ✅ Để trống để tự động dùng host hiện tại (tránh lỗi CORS/Sai server)
 
 async function handleLogin() {
     const role = document.getElementById('loginRole').value;
