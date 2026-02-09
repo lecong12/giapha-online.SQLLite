@@ -41,6 +41,16 @@ const importData = async () => {
     // Set để tránh trùng lặp quan hệ vợ chồng (A-B và B-A)
     const processedMarriages = new Set();
 
+    // Lấy Owner ID đầu tiên (thường là Admin)
+    let defaultOwnerId = 1;
+    await new Promise(resolve => {
+        db.get("SELECT id FROM users ORDER BY id ASC LIMIT 1", [], (err, row) => {
+            if (row) defaultOwnerId = row.id;
+            resolve();
+        });
+    });
+    console.log(`🔹 Sử dụng Owner ID: ${defaultOwnerId}`);
+
     // --- BƯỚC 1: INSERT NGƯỜI VÀO BẢNG PEOPLE ---
     console.log("🔹 BƯỚC 1: Đang tạo hồ sơ thành viên...");
     let successCount = 0;
@@ -63,10 +73,7 @@ const importData = async () => {
 
         // Mặc định owner_id = 1 (Admin), is_alive = 1 (Còn sống), member_type = 'blood' (Huyết thống)
         const params = [
-            1, row.full_name, row.gender, row.birth_date, row.death_date, row.generation,
-            extraNotes, row.phone, row.job, row.address, 1, 'blood'
-        ];
-
+            
         // Dùng Promise để đợi DB xử lý xong dòng này mới qua dòng khác
         await new Promise(resolve => {
             // QUAN TRỌNG: Dùng function() thường thay vì arrow function để lấy 'this.lastID'

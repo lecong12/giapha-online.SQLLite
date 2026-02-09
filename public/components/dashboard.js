@@ -1216,7 +1216,7 @@ async function importData() {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (!file.name.endsWith('.csv')) {
+    if (!file.name.toLowerCase().endsWith('.csv')) {
       alert('Chỉ chấp nhận file CSV');
       return;
     }
@@ -1251,7 +1251,13 @@ async function importData() {
         return;
       }
 
-      const result = await response.json();
+      let result;
+      try {
+        const text = await response.text();
+        result = JSON.parse(text);
+      } catch (e) {
+        throw new Error(`Server trả về lỗi không xác định (${response.status}): ${e.message}`);
+      }
 
    if (result.success) {
   let message = `✅ ${result.message}\n\nThành công: ${result.successCount}\nLỗi: ${result.errorCount}`;
@@ -1282,7 +1288,7 @@ async function importData() {
 
     } catch (err) {
       console.error('Lỗi import:', err);
-      alert('❌ Có lỗi khi import dữ liệu');
+      alert(`❌ Có lỗi khi import dữ liệu:\n${err.message}`);
     }
   };
 
