@@ -1,0 +1,7 @@
+[user]
+	name = lecong12
+	email = lecong12@gmail.com
+[pull]
+	rebase = false
+[alias]
+	up = "!git add . ; git commit -m 'Cập nhật' ; git push origin main --force"

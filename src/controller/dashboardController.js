@@ -1,222 +1,105 @@
-// src/controller/dashboardController.js
-
 function getDb(req) {
   return req.app.get('db');
 }
 
 function getDashboardStats(req, res) {
   const db = getDb(req);
-  const userId = req.user.id;
-  const userRole = req.user.role;
+  const ownerId = req.user.role === 'viewer' ? req.user.owner_id : req.user.id;
 
-  // Nếu là viewer, lấy owner_id của viewer
-  if (userRole === 'viewer') {
-    db.get(`SELECT owner_id FROM users WHERE id = ?`, [userId], (err, userRow) => {
-      if (err || !userRow || !userRow.owner_id) {
-        return res.status(403).json({ 
-          success: false, 
-          message: 'Không tìm thấy owner của viewer này' 
-        });
-      }
-      
-      // Gọi hàm fetch stats với owner_id đúng
-      fetchDashboardStats(db, userRow.owner_id, res);
-    });
-    return;
-  }
+  const stats = {};
 
-  // Owner xem stats của chính mình
-  fetchDashboardStats(db, userId, res);
-}
-
-// Hàm helper fetch stats
-function fetchDashboardStats(db, ownerId, res) {
-  const sqlSummary = `
-    SELECT
-      COUNT(*) AS total,
-      SUM(CASE WHEN gender = 'Nam' THEN 1 ELSE 0 END) AS males,
-      SUM(CASE WHEN gender = 'Nữ' THEN 1 ELSE 0 END) AS females,
-      MAX(generation) AS maxGeneration
-    FROM people
-    WHERE owner_id = ?;
+  // 1. Tổng quan
+  const sqlOverview = `
+    SELECT 
+      COUNT(*) as total,
+      SUM(CASE WHEN gender = 'Nam' THEN 1 ELSE 0 END) as males,
+      SUM(CASE WHEN gender = 'Nữ' THEN 1 ELSE 0 END) as females,
+      MAX(generation) as maxGeneration
+    FROM people WHERE owner_id = ?
   `;
 
-  db.get(sqlSummary, [ownerId], (err, row) => {
-    if (err) {
-      console.error('Lỗi query tổng quan:', err.message);
-      return res.status(500).json({ success: false, message: 'Lỗi server' });
-    }
+  db.get(sqlOverview, [ownerId], (err, row) => {
+    if (err) return res.status(500).json({ success: false, message: 'Lỗi server' });
 
-    const total = row.total || 0;
-    const males = row.males || 0;
-    const females = row.females || 0;
-    const maxGeneration = row.maxGeneration || 0;
+    stats.total = row.total || 0;
+    stats.males = row.males || 0;
+    stats.females = row.females || 0;
+    stats.maxGeneration = row.maxGeneration || 0;
 
-    // Phân bố thế hệ
-    const sqlGen = `
-      SELECT generation, COUNT(*) AS count
-      FROM people
-      WHERE owner_id = ?
-      GROUP BY generation
-      ORDER BY generation ASC;
-    `;
-    
-    db.all(sqlGen, [ownerId], (err2, genRows) => {
-      if (err2) {
-        console.error('Lỗi query generations:', err2.message);
-        return res.status(500).json({ success: false, message: 'Lỗi server' });
-      }
+    // 2. Phân bố thế hệ
+    const sqlGen = `SELECT generation, COUNT(*) as count FROM people WHERE owner_id = ? GROUP BY generation`;
+    db.all(sqlGen, [ownerId], (err2, gens) => {
+      stats.generations = gens || [];
 
-      const generations = genRows.map(r => ({
-        generation: r.generation,
-        count: r.count
-      }));
-
-      // Sinh nhật sắp tới
-      const sqlBirthday = `
-        SELECT id, full_name, birth_date
-        FROM people
-        WHERE owner_id = ?
-          AND is_alive = 1
-          AND birth_date IS NOT NULL
-          AND birth_date != ''
-      `;
+      // 3. Sinh nhật & Ngày giỗ sắp tới (30 ngày)
+      const sqlPeople = `SELECT id, full_name, birth_date, death_date, is_alive FROM people WHERE owner_id = ?`;
       
-      db.all(sqlBirthday, [ownerId], (err3, birthdayRows) => {
+      db.all(sqlPeople, [ownerId], (err3, people) => {
         if (err3) {
-          console.error('Lỗi query birthdays:', err3.message);
-          return res.status(500).json({ success: false, message: 'Lỗi server' });
+          console.error('❌ Lỗi getDashboardStats (People):', err3.message);
+          return res.status(500).json({ success: false, message: 'Lỗi lấy dữ liệu thành viên' });
         }
 
-        const upcomingBirthdays = calcUpcomingBirthdays(birthdayRows, 45);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const currentYear = today.getFullYear();
 
-        // Query ngày giỗ
-        const sqlDeceased = `
-          SELECT id, full_name, birth_date, death_date, is_alive
-          FROM people
-          WHERE owner_id = ?
-            AND is_alive = 0
-            AND death_date IS NOT NULL
-            AND death_date != ''
-        `;
-        
-        db.all(sqlDeceased, [ownerId], (err4, deceasedRows) => {
-          if (err4) {
-            console.error('Lỗi query death anniversaries:', err4.message);
-            return res.status(500).json({ success: false, message: 'Lỗi server' });
+        const upcoming = [];
+        const upcomingDeathAnniversaries = [];
+        const peopleList = Array.isArray(people) ? people : [];
+
+        peopleList.forEach(p => {
+          // --- Xử lý Sinh nhật (Người còn sống) ---
+          if (p.is_alive && p.birth_date && p.birth_date !== 'unknown') {
+            const birth = new Date(p.birth_date);
+            const nextBirthday = new Date(currentYear, birth.getMonth(), birth.getDate());
+            if (nextBirthday < today) nextBirthday.setFullYear(currentYear + 1);
+
+            const diffDays = Math.ceil((nextBirthday - today) / (1000 * 60 * 60 * 24));
+            if (diffDays <= 30) {
+              upcoming.push({
+                ...p,
+                daysLeft: diffDays,
+                nextBirthday: nextBirthday.toISOString().split('T')[0],
+                birthday: p.birth_date
+              });
+            }
           }
 
-          const upcomingDeathAnniversaries = calcUpcomingDeathAnniversaries(deceasedRows, 45);
+          // --- Xử lý Ngày giỗ (Người đã mất) ---
+          if (!p.is_alive && p.death_date && p.death_date !== 'unknown') {
+            const death = new Date(p.death_date);
+            const nextAnniversary = new Date(currentYear, death.getMonth(), death.getDate());
+            if (nextAnniversary < today) nextAnniversary.setFullYear(currentYear + 1);
 
-          // Lấy activity logs
-          const sqlActivities = `
-            SELECT id, actor_name, actor_role, action_type, entity_type, 
-                   entity_name, description, created_at
-            FROM activity_logs
-            WHERE owner_id = ?
-            ORDER BY created_at DESC
-            LIMIT 10
-          `;
+            const diffDays = Math.ceil((nextAnniversary - today) / (1000 * 60 * 60 * 24));
+            const yearCount = nextAnniversary.getFullYear() - death.getFullYear();
 
-          db.all(sqlActivities, [ownerId], (err5, activityRows) => {
-            if (err5) {
-              console.error('Lỗi query activities:', err5.message);
-              activityRows = [];
+            if (diffDays <= 30) {
+              upcomingDeathAnniversaries.push({
+                ...p,
+                daysLeft: diffDays,
+                nextAnniversary: nextAnniversary.toISOString().split('T')[0],
+                yearCount: yearCount,
+                death_date: p.death_date
+              });
             }
+          }
+        });
 
-            // RETURN TẤT CẢ DỮ LIỆU
-            return res.json({
-              success: true,
-              stats: {
-                total,
-                males,
-                females,
-                maxGeneration,
-                generations,
-                upcomingBirthdays,
-                upcomingDeathAnniversaries, // ← ĐÃ ĐƯỢC ĐỊNH NGHĨA
-                activities: activityRows
-              }
-            });
-          });
+        stats.upcomingBirthdays = upcoming.sort((a, b) => a.daysLeft - b.daysLeft);
+        stats.upcomingDeathAnniversaries = upcomingDeathAnniversaries.sort((a, b) => a.daysLeft - b.daysLeft);
+
+        // 4. Hoạt động gần đây
+        const sqlActivity = `SELECT * FROM activity_logs WHERE owner_id = ? ORDER BY created_at DESC LIMIT 10`;
+        db.all(sqlActivity, [ownerId], (err4, activities) => {
+          stats.activities = activities || [];
+          
+          res.json({ success: true, stats });
         });
       });
     });
   });
 }
 
-// Tính sinh nhật sắp tới
-function calcUpcomingBirthdays(rows, daysAhead) {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-  return rows
-    .map(r => {
-      if (!r.birth_date) return null;
-
-      const birth = new Date(r.birth_date);
-      let next = new Date(today.getFullYear(), birth.getMonth(), birth.getDate());
-
-      if (next < today) {
-        next = new Date(today.getFullYear() + 1, birth.getMonth(), birth.getDate());
-      }
-
-      const diffMs = next - today;
-      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-
-      return {
-        id: r.id,
-        full_name: r.full_name,
-        birthday: r.birth_date,
-        daysLeft: diffDays,
-        nextBirthday: formatDateLocal(next)
-      };
-    })
-    .filter(x => x && x.daysLeft >= 0 && x.daysLeft <= daysAhead)
-    .sort((a, b) => a.daysLeft - b.daysLeft);
-}
-
-// Tính ngày giỗ sắp tới
-function calcUpcomingDeathAnniversaries(rows, daysAhead) {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-  return rows
-    .map(r => {
-      if (!r.death_date) return null;
-
-      const death = new Date(r.death_date);
-      let next = new Date(today.getFullYear(), death.getMonth(), death.getDate());
-
-      if (next < today) {
-        next = new Date(today.getFullYear() + 1, death.getMonth(), death.getDate());
-      }
-
-      const diffMs = next - today;
-      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-      const yearsPassed = today.getFullYear() - death.getFullYear();
-
-      return {
-        id: r.id,
-        full_name: r.full_name,
-        death_date: r.death_date,
-        daysLeft: diffDays,
-        nextAnniversary: formatDateLocal(next),
-        yearCount: yearsPassed
-      };
-    })
-    .filter(x => x && x.daysLeft >= 0 && x.daysLeft <= daysAhead)
-    .sort((a, b) => a.daysLeft - b.daysLeft);
-}
-
-// Helper format date
-function formatDateLocal(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-module.exports = {
-  getDashboardStats
-};
+module.exports = { getDashboardStats };

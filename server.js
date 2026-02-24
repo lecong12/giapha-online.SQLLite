@@ -3,7 +3,7 @@ const express = require("express");
 const path = require("path");
 const cors = require("cors");
 const fs = require("fs");
-const dbAdapter = require("./db"); // Import Adapter PostgreSQL
+const dbAdapter = require("./db"); // Import Adapter SQLite
 
 const app = express();
 // KHAI BÁO PORT DUY NHẤT Ở ĐÂY
